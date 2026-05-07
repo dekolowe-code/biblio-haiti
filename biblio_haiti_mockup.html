@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: transparent;
+    padding: 16px 0;
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .screens-row {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; }
+
+  /* Phone frame */
+  .phone {
+    width: 180px;
+    height: 360px;
+    border-radius: 28px;
+    border: 2px solid var(--color-border-secondary);
+    overflow: hidden;
+    position: relative;
+    background: #0d0d14;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    flex-shrink: 0;
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 52px; height: 10px;
+    background: #0d0d14;
+    border-radius: 0 0 8px 8px;
+    z-index: 10;
+  }
+
+  .screen { width: 100%; height: 100%; overflow: hidden; position: relative; }
+
+  /* ── SPLASH SCREEN ── */
+  .splash {
+    background: linear-gradient(160deg, #0d1b2a 0%, #1a0a2e 60%, #0d1b2a 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; height: 100%;
+  }
+  .splash-flag { display: flex; height: 28px; width: 56px; border-radius: 4px; overflow: hidden; }
+  .flag-blue { flex: 1; background: #00209F; }
+  .flag-red  { flex: 1; background: #D21034; }
+  .splash-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 900;
+    color: #fff; letter-spacing: -0.5px;
+    text-align: center; line-height: 1.1;
+  }
+  .splash-title span { color: #F5C842; }
+  .splash-sub { font-size: 9px; color: #8899bb; letter-spacing: 2px; text-transform: uppercase; }
+  .splash-ring {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid rgba(245,200,66,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+    position: relative;
+  }
+  .splash-ring::after {
+    content:''; position:absolute; inset:-6px;
+    border-radius:50%; border:1px solid rgba(245,200,66,0.12);
+  }
+  .splash-icon { font-size: 28px; }
+  .splash-dot-row { display:flex; gap:5px; margin-top:12px; }
+  .sdot { width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.2); }
+  .sdot.active { background:#F5C842; width:14px; }
+
+  /* ── HOME SCREEN ── */
+  .home { background: #0f0f1a; height: 100%; display: flex; flex-direction: column; }
+  .home-header {
+    padding: 16px 12px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .home-greeting { font-size: 9px; color: #5566aa; }
+  .home-name { font-size: 13px; font-weight: 600; color: #fff; margin-top: 1px; }
+  .home-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg,#F5C842,#E8853A);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #0d0d14;
+  }
+  .points-pill {
+    background: rgba(245,200,66,0.12); border: 0.5px solid rgba(245,200,66,0.3);
+    border-radius: 20px; padding: 3px 8px;
+    font-size: 9px; font-weight: 600; color: #F5C842;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .search-bar {
+    margin: 4px 12px 8px;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 7px 10px;
+    font-size: 9px; color: #4455aa;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .section-title { font-size: 10px; font-weight: 600; color: #fff; padding: 0 12px 6px; }
+  .chips-row { display:flex; gap:5px; padding: 0 12px 8px; overflow:hidden; }
+  .chip {
+    border-radius: 20px; padding: 3px 9px;
+    font-size: 8px; font-weight: 500; white-space: nowrap;
+  }
+  .chip.active { background: #F5C842; color: #0d0d14; }
+  .chip.passive { background: rgba(255,255,255,0.06); color: #8899cc; border: 0.5px solid rgba(255,255,255,0.1); }
+  .books-row { display:flex; gap:8px; padding: 0 12px; overflow:hidden; }
+  .book-card {
+    flex-shrink:0; width: 64px;
+  }
+  .book-cover {
+    width:64px; height:86px; border-radius:8px; overflow:hidden;
+    position:relative; margin-bottom:5px;
+  }
+  .cover-bg {
+    width:100%; height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px; padding:6px;
+  }
+  .cover-title { font-size:7px; font-weight:700; color:#fff; text-align:center; line-height:1.2; }
+  .cover-author { font-size:6px; color:rgba(255,255,255,0.6); text-align:center; }
+  .book-badge {
+    position:absolute; top:4px; right:4px;
+    border-radius:4px; padding:1px 4px;
+    font-size:6px; font-weight:700;
+  }
+  .badge-free { background:#2ecc71; color:#fff; }
+  .badge-pts  { background:#F5C842; color:#0d0d14; }
+  .badge-pay  { background:#e74c3c; color:#fff; }
+  .book-name { font-size:7.5px; font-weight:600; color:#dde; line-height:1.2; }
+  .book-auth { font-size:6.5px; color:#5566aa; margin-top:1px; }
+  .stars-row { display:flex; gap:1px; margin-top:2px; }
+  .star { font-size:6px; color:#F5C842; }
+  .bottom-nav {
+    margin-top:auto;
+    background: rgba(15,15,26,0.95); border-top: 0.5px solid rgba(255,255,255,0.08);
+    display:flex; justify-content:space-around; padding:8px 0 10px;
+  }
+  .nav-item { display:flex;flex-direction:column;align-items:center;gap:2px; }
+  .nav-icon { font-size:14px; }
+  .nav-lbl { font-size:6.5px; color:#5566aa; }
+  .nav-lbl.active { color:#F5C842; }
+  .nav-icon.active { filter: drop-shadow(0 0 3px #F5C842); }
+
+  /* ── BOOK DETAIL ── */
+  .detail { background: #0f0f1a; height:100%; display:flex; flex-direction:column; }
+  .detail-cover {
+    height:130px; position:relative;
+    display:flex; align-items:flex-end; padding:10px;
+  }
+  .detail-cover-bg { position:absolute;inset:0; }
+  .back-btn {
+    position:absolute; top:14px; left:10px;
+    width:22px;height:22px;border-radius:50%;
+    background:rgba(0,0,0,0.4);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;color:#fff;
+  }
+  .detail-cover-card {
+    width:52px;height:72px;border-radius:6px;overflow:hidden;
+    position:relative; z-index:2; flex-shrink:0;
+    box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  }
+  .detail-info { z-index:2; margin-left:8px; }
+  .detail-title { font-family:'Playfair Display',serif; font-size:11px; font-weight:700; color:#fff; line-height:1.2; }
+  .detail-author { font-size:8px; color:#8899cc; margin-top:2px; }
+  .detail-meta { display:flex;gap:6px;margin-top:4px; }
+  .meta-badge {
+    border-radius:4px;padding:2px 5px;font-size:7px;font-weight:600;
+  }
+  .detail-body { padding:10px 12px; flex:1; overflow:hidden; }
+  .detail-tabs { display:flex;gap:0;border-bottom:0.5px solid rgba(255,255,255,0.08);margin-bottom:8px; }
+  .tab { padding:4px 10px;font-size:8px;color:#5566aa; border-bottom:1.5px solid transparent; }
+  .tab.active { color:#F5C842;border-color:#F5C842; }
+  .detail-desc { font-size:7.5px;color:#8899bb;line-height:1.6; }
+  .access-box {
+    margin:8px 0;
+    background:rgba(245,200,66,0.06);border:0.5px solid rgba(245,200,66,0.2);
+    border-radius:8px;padding:8px 10px;
+  }
+  .access-title { font-size:8px;font-weight:600;color:#F5C842;margin-bottom:4px; }
+  .access-options { display:flex;gap:4px; }
+  .access-opt {
+    flex:1;border-radius:6px;padding:5px 2px;text-align:center;
+    border:0.5px solid rgba(255,255,255,0.1);
+    font-size:7px;color:#8899cc;
+  }
+  .access-opt.selected { border-color:#F5C842;background:rgba(245,200,66,0.1);color:#F5C842; }
+  .access-opt .opt-pts { font-size:9px;font-weight:700;display:block;color:#fff; }
+  .access-opt.selected .opt-pts { color:#F5C842; }
+  .cta-btn {
+    margin:6px 0 0;width:100%;background:#F5C842;border:none;border-radius:8px;
+    padding:8px;font-size:9px;font-weight:700;color:#0d0d14;text-align:center;
+    cursor:pointer;
+  }
+
+  /* ── POINTS / GAMIFICATION ── */
+  .points-screen { background:#0f0f1a;height:100%;display:flex;flex-direction:column; }
+  .pts-header { padding:14px 12px 8px; }
+  .pts-title { font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#fff; }
+  .pts-sub { font-size:8px;color:#5566aa;margin-top:1px; }
+  .pts-card {
+    margin:4px 12px 8px;
+    background:linear-gradient(135deg,#1a1430,#0d1b2a);
+    border:0.5px solid rgba(245,200,66,0.25);
+    border-radius:12px;padding:10px 12px;
+  }
+  .pts-big { font-size:28px;font-weight:700;color:#F5C842;line-height:1; }
+  .pts-lbl { font-size:7.5px;color:#8899bb;margin-top:1px; }
+  .pts-progress { margin-top:7px; }
+  .progress-bar { height:4px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden; }
+  .progress-fill { height:100%;background:#F5C842;border-radius:2px;width:62%; }
+  .progress-txt { font-size:7px;color:#5566aa;margin-top:3px;text-align:right; }
+  .earn-title { font-size:9px;font-weight:600;color:#fff;padding:0 12px 5px; }
+  .earn-list { padding:0 12px;display:flex;flex-direction:column;gap:5px; }
+  .earn-item {
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);
+    border-radius:8px;padding:7px 9px;
+  }
+  .earn-icon { font-size:14px;flex-shrink:0; }
+  .earn-info { flex:1; }
+  .earn-name { font-size:8px;font-weight:500;color:#dde; }
+  .earn-desc { font-size:7px;color:#5566aa;margin-top:1px; }
+  .earn-pts-badge {
+    background:rgba(245,200,66,0.12);border:0.5px solid rgba(245,200,66,0.25);
+    border-radius:20px;padding:2px 6px;font-size:8px;font-weight:700;color:#F5C842;
+    white-space:nowrap;
+  }
+  .level-row { display:flex;gap:5px;padding:6px 12px 0;overflow:hidden; }
+  .level-badge {
+    flex:1;border-radius:8px;padding:6px 4px;text-align:center;
+    border:0.5px solid;
+  }
+  .lb-icon { font-size:14px; }
+  .lb-name { font-size:6.5px;font-weight:600;margin-top:2px; }
+  .lb-pts { font-size:6px;margin-top:1px; }
+
+  /* ── ADMIN SCREEN ── */
+  .admin { background:#0f0f1a;height:100%;display:flex;flex-direction:column; }
+  .admin-header {
+    background:rgba(255,255,255,0.03);
+    border-bottom:0.5px solid rgba(255,255,255,0.08);
+    padding:12px; display:flex;align-items:center;gap:6px;
+  }
+  .admin-badge {
+    background:rgba(210,16,52,0.2);border:0.5px solid rgba(210,16,52,0.4);
+    border-radius:4px;padding:2px 6px;font-size:7px;font-weight:700;color:#D21034;
+  }
+  .admin-title { font-size:11px;font-weight:600;color:#fff; }
+  .stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px 12px; }
+  .stat-card {
+    background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);
+    border-radius:8px;padding:7px 9px;
+  }
+  .stat-num { font-size:16px;font-weight:700;color:#fff; }
+  .stat-lbl { font-size:7px;color:#5566aa;margin-top:1px; }
+  .stat-delta { font-size:7px;color:#2ecc71;margin-top:2px; }
+  .upload-zone {
+    margin:0 12px 8px;
+    border:1px dashed rgba(245,200,66,0.3);border-radius:10px;
+    padding:12px;text-align:center;
+    background:rgba(245,200,66,0.03);
+  }
+  .upload-icon { font-size:20px;margin-bottom:4px; }
+  .upload-text { font-size:8px;color:#8899bb; }
+  .upload-types { display:flex;gap:4px;justify-content:center;margin-top:5px; }
+  .type-pill {
+    border-radius:20px;padding:2px 7px;font-size:7px;font-weight:600;
+    background:rgba(255,255,255,0.06);color:#8899cc;
+    border:0.5px solid rgba(255,255,255,0.1);
+  }
+  .recent-title { font-size:9px;font-weight:600;color:#fff;padding:0 12px 5px; }
+  .recent-list { padding:0 12px;display:flex;flex-direction:column;gap:4px; }
+  .recent-item {
+    display:flex;align-items:center;gap:7px;
+    background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);
+    border-radius:7px;padding:6px 8px;
+  }
+  .ri-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+  .ri-name { flex:1;font-size:7.5px;color:#ccd; }
+  .ri-status { font-size:7px;border-radius:4px;padding:1px 5px;font-weight:600; }
+  .st-live { background:rgba(46,204,113,0.15);color:#2ecc71; }
+  .st-draft { background:rgba(255,180,0,0.15);color:#F5C842; }
+</style>
+</head>
+<body>
+
+<!-- ROW 1: Splash + Home + Book Detail -->
+<div class="label">Écrans principaux</div>
+<div class="screens-row">
+
+  <!-- SPLASH -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="screen splash">
+        <div class="splash-ring">
+          <span class="splash-icon">📚</span>
+        </div>
+        <div class="splash-title">Biblio<br><span>Haiti</span></div>
+        <div class="splash-sub">Lire · Apprendre · Grandir</div>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+          <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.15);"></div>
+          <div style="width:14px;height:5px;border-radius:20px;background:#F5C842;"></div>
+          <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.15);"></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px;">
+          <button style="background:#F5C842;border:none;border-radius:8px;padding:7px 16px;font-size:9px;font-weight:700;color:#0d0d14;cursor:pointer;">Créer un compte</button>
+          <button style="background:transparent;border:0.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 12px;font-size:9px;color:#aab;cursor:pointer;">Invité</button>
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:5px;">
+          <div style="height:0.5px;flex:1;background:rgba(255,255,255,0.08);"></div>
+          <span style="font-size:7.5px;color:#445588;">ou continuer avec</span>
+          <div style="height:0.5px;flex:1;background:rgba(255,255,255,0.08);"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:14px;">G</div>
+          <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:14px;">f</div>
+        </div>
+        <div style="position:absolute;bottom:12px;display:flex;gap:3px;align-items:center;">
+          <div style="width:4px;height:4px;border-radius:50%;background:#F5C842;"></div>
+          <div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.15);"></div>
+          <div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.15);"></div>
+        </div>
+      </div>
+    </div>
+    <div class="label" style="margin-top:6px;margin-bottom:0;">Splash / Auth</div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="screen home">
+        <div class="home-header">
+          <div>
+            <div class="home-greeting">Bonjou,</div>
+            <div class="home-name">Jeeko 👋</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="points-pill">⭐ 340 pts</div>
+            <div class="home-avatar">J</div>
+          </div>
+        </div>
+        <div class="search-bar">
+          <span style="font-size:10px;">🔍</span>
+          <span>Cherche un livre...</span>
+        </div>
+        <div class="chips-row">
+          <div class="chip active">Tout</div>
+          <div class="chip passive">Haïtien</div>
+          <div class="chip passive">Éducatif</div>
+          <div class="chip passive">Roman</div>
+        </div>
+        <div class="section-title">🔥 Tendances en Haïti</div>
+        <div class="books-row">
+          <div class="book-card">
+            <div class="book-cover">
+              <div class="cover-bg" style="background:linear-gradient(135deg,#1a1a4a,#2d3a8c);">
+                <div class="cover-title">Pays sans chapeau</div>
+                <div class="cover-author">Laferrière</div>
+              </div>
+              <div class="book-badge badge-pts">120 pts</div>
+            </div>
+            <div class="book-name">Pays sans chapeau</div>
+            <div class="book-auth">D. Laferrière</div>
+            <div class="stars-row"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star" style="color:#334;">★</span></div>
+          </div>
+          <div class="book-card">
+            <div class="book-cover">
+              <div class="cover-bg" style="background:linear-gradient(135deg,#2a0a0a,#8c1a1a);">
+                <div class="cover-title">Bicentenaire</div>
+                <div class="cover-author">Gary Victor</div>
+              </div>
+              <div class="book-badge badge-free">GRATIS</div>
+            </div>
+            <div class="book-name">Bicentenaire</div>
+            <div class="book-auth">Gary Victor</div>
+            <div class="stars-row"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+          </div>
+          <div class="book-card">
+            <div class="book-cover">
+              <div class="cover-bg" style="background:linear-gradient(135deg,#0a2a0a,#1a6a1a);">
+                <div class="cover-title">Grammaire Kreyòl</div>
+                <div class="cover-author">MEN Haiti</div>
+              </div>
+              <div class="book-badge badge-pay">$2.99</div>
+            </div>
+            <div class="book-name">Grammaire Kreyòl</div>
+            <div class="book-auth">MEN Haiti</div>
+            <div class="stars-row"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star" style="color:#334;">★</span></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><span class="nav-icon active">🏠</span><span class="nav-lbl active">Accueil</span></div>
+          <div class="nav-item"><span class="nav-icon">🔍</span><span class="nav-lbl">Explorer</span></div>
+          <div class="nav-item"><span class="nav-icon">📖</span><span class="nav-lbl">Mes livres</span></div>
+          <div class="nav-item"><span class="nav-icon">⭐</span><span class="nav-lbl">Points</span></div>
+          <div class="nav-item"><span class="nav-icon">👤</span><span class="nav-lbl">Profil</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="label" style="margin-top:6px;margin-bottom:0;">Accueil</div>
+  </div>
+
+  <!-- BOOK DETAIL -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="screen detail">
+        <div class="detail-cover">
+          <div class="detail-cover-bg" style="background:linear-gradient(160deg,#1a1a4a,#2d3a8c,#0f0f1a);"></div>
+          <div class="back-btn">←</div>
+          <div class="detail-cover-card">
+            <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a4a,#2d3a8c);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px;">
+              <div style="font-size:6.5px;font-weight:700;color:#fff;text-align:center;line-height:1.2;">Pays sans chapeau</div>
+            </div>
+          </div>
+          <div class="detail-info">
+            <div class="detail-title">Pays sans<br>chapeau</div>
+            <div class="detail-author">Dany Laferrière</div>
+            <div class="detail-meta">
+              <div class="meta-badge" style="background:rgba(245,200,66,0.15);color:#F5C842;">Roman</div>
+              <div class="meta-badge" style="background:rgba(46,204,113,0.12);color:#2ecc71;">Haïtien</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-body">
+          <div class="detail-tabs">
+            <div class="tab active">Résumé</div>
+            <div class="tab">Avis (34)</div>
+            <div class="tab">Auteur</div>
+          </div>
+          <div class="detail-desc">Un voyage entre le monde des vivants et celui des morts dans un Haïti mystérieux. Prix Médicis 2009.</div>
+          <div class="access-box">
+            <div class="access-title">🔓 Choisir l'accès</div>
+            <div class="access-options">
+              <div class="access-opt">
+                <span class="opt-pts">50</span>
+                <span>pts</span>
+                <span style="font-size:6px;color:#5566aa;">7 jours</span>
+              </div>
+              <div class="access-opt selected">
+                <span class="opt-pts">120</span>
+                <span>pts</span>
+                <span style="font-size:6px;">30 jours</span>
+              </div>
+              <div class="access-opt">
+                <span class="opt-pts">300</span>
+                <span>pts</span>
+                <span style="font-size:6px;color:#5566aa;">À vie</span>
+              </div>
+            </div>
+          </div>
+          <button class="cta-btn">Débloquer avec 120 pts ⭐</button>
+          <div style="text-align:center;margin-top:5px;font-size:7.5px;color:#5566aa;">ou <span style="color:#F5C842;">payer $1.99</span> directement</div>
+        </div>
+      </div>
+    </div>
+    <div class="label" style="margin-top:6px;margin-bottom:0;">Détail livre</div>
+  </div>
+
+</div>
+
+<!-- ROW 2: Points + Admin -->
+<div class="label">Gamification & Administration</div>
+<div class="screens-row">
+
+  <!-- POINTS SCREEN -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="screen points-screen">
+        <div class="pts-header">
+          <div class="pts-title">Mes Points</div>
+          <div class="pts-sub">Niveau : Lecteur Avancé 📗</div>
+        </div>
+        <div class="pts-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="pts-big">340</div>
+              <div class="pts-lbl">Livres-Points disponibles</div>
+            </div>
+            <button style="background:rgba(245,200,66,0.12);border:0.5px solid rgba(245,200,66,0.3);border-radius:7px;padding:4px 8px;font-size:7.5px;color:#F5C842;font-weight:600;cursor:pointer;">+ Acheter</button>
+          </div>
+          <div class="pts-progress">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <div class="progress-txt">660 pts → Maître des Lettres 📘</div>
+          </div>
+        </div>
+        <div class="level-row">
+          <div class="level-badge" style="border-color:rgba(100,100,200,0.3);background:rgba(100,100,200,0.06);">
+            <div class="lb-icon">📕</div>
+            <div class="lb-name" style="color:#8899cc;">Débutant</div>
+            <div class="lb-pts" style="color:#5566aa;">0 pts</div>
+          </div>
+          <div class="level-badge" style="border-color:rgba(46,204,113,0.4);background:rgba(46,204,113,0.08);">
+            <div class="lb-icon">📗</div>
+            <div class="lb-name" style="color:#2ecc71;">Avancé</div>
+            <div class="lb-pts" style="color:#2ecc71;">✓ Actuel</div>
+          </div>
+          <div class="level-badge" style="border-color:rgba(245,200,66,0.2);background:rgba(245,200,66,0.04);">
+            <div class="lb-icon">📘</div>
+            <div class="lb-name" style="color:#5566aa;">Maître</div>
+            <div class="lb-pts" style="color:#5566aa;">1000 pts</div>
+          </div>
+        </div>
+        <div class="earn-title" style="margin-top:8px;">Comment gagner des points</div>
+        <div class="earn-list">
+          <div class="earn-item">
+            <div class="earn-icon">📖</div>
+            <div class="earn-info">
+              <div class="earn-name">Finir un chapitre</div>
+              <div class="earn-desc">Lecture complète détectée</div>
+            </div>
+            <div class="earn-pts-badge">+5 pts</div>
+          </div>
+          <div class="earn-item">
+            <div class="earn-icon">🎯</div>
+            <div class="earn-info">
+              <div class="earn-name">Quiz réussi</div>
+              <div class="earn-desc">Score ≥ 80%</div>
+            </div>
+            <div class="earn-pts-badge">+30 pts</div>
+          </div>
+          <div class="earn-item">
+            <div class="earn-icon">👥</div>
+            <div class="earn-info">
+              <div class="earn-name">Parrainer un ami</div>
+              <div class="earn-desc">Ami inscrit via ton lien</div>
+            </div>
+            <div class="earn-pts-badge">+100 pts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="label" style="margin-top:6px;margin-bottom:0;">Points fidélité</div>
+  </div>
+
+  <!-- ADMIN SCREEN -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="screen admin">
+        <div class="admin-header">
+          <div class="admin-badge">ADMIN</div>
+          <div class="admin-title">Biblio Haiti — Dashboard</div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-num">1,204</div>
+            <div class="stat-lbl">Utilisateurs actifs</div>
+            <div class="stat-delta">▲ +12% ce mois</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">87</div>
+            <div class="stat-lbl">Livres publiés</div>
+            <div class="stat-delta">▲ +5 cette semaine</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">$340</div>
+            <div class="stat-lbl">Revenus (mois)</div>
+            <div class="stat-delta" style="color:#F5C842;">● En cours</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">4,820</div>
+            <div class="stat-lbl">Lectures complètes</div>
+            <div class="stat-delta">▲ +8%</div>
+          </div>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-icon">📤</div>
+          <div class="upload-text">Glisse ou clique pour uploader un livre</div>
+          <div class="upload-types">
+            <div class="type-pill">PDF</div>
+            <div class="type-pill">ePub</div>
+            <div class="type-pill">MP3</div>
+          </div>
+        </div>
+        <div class="recent-title">Livres récents</div>
+        <div class="recent-list">
+          <div class="recent-item">
+            <div class="ri-dot" style="background:#2ecc71;"></div>
+            <div class="ri-name">Pays sans chapeau</div>
+            <div class="ri-status st-live">En ligne</div>
+          </div>
+          <div class="recent-item">
+            <div class="ri-dot" style="background:#F5C842;"></div>
+            <div class="ri-name">Grammaire Kreyòl</div>
+            <div class="ri-status st-draft">Brouillon</div>
+          </div>
+          <div class="recent-item">
+            <div class="ri-dot" style="background:#2ecc71;"></div>
+            <div class="ri-name">Bicentenaire</div>
+            <div class="ri-status st-live">En ligne</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="label" style="margin-top:6px;margin-bottom:0;">Panel Admin</div>
+  </div>
+
+</div>
+
+</body>
+</html>
