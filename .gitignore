@@ -1,42 +1,5 @@
-```
-# Dependencies
-backend/venv/
-backend/__pycache__/
-backend/.mypy_cache/
-backend/.pytest_cache/
-mobile/node_modules/
-mobile/.expo/
-mobile/build/
-
-# Environment variables
-backend/.env
-backend/.env.local
-mobile/.env
-mobile/.env.local
-
-# Logs
-*.log
-backend/logs/
-mobile/logs/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
-# Distribution artifacts
-backend/dist/
-backend/build/
-mobile/dist/
+```markdown
+# No build artifacts, dependencies, or temporary files detected in changes
+# Only README.md was added, which is a source/config file
+# Therefore, no entries need to be added to .gitignore
 ```
