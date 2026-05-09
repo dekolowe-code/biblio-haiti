@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: biblio_postgres
+    environment:
+      POSTGRES_USER: biblio_user
+      POSTGRES_PASSWORD: biblio_password
+      POSTGRES_DB: biblio_haiti
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biblio_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: biblio_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://biblio_user:biblio_password@postgres:5432/biblio_haiti
+      SECRET_KEY: ${SECRET_KEY:-dev_secret_key_change_in_production}
+      DEBUG: "True"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+volumes:
+  postgres_data:
