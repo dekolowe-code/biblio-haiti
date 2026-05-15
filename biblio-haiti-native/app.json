@@ -17,7 +17,9 @@
       "bundleIdentifier": "com.bibliohaiti.app",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à la bibliothèque de photos pour sauvegarder les couvertures de livres.",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {

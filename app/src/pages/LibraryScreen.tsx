@@ -30,14 +30,14 @@ export default function LibraryScreen() {
   const tabs: { key: TabType; label: string }[] = [
     { key: 'reading', label: 'En cours' },
     { key: 'favorites', label: 'Favoris' },
-    { key: 'unlocked', label: 'D\u00e9bloqu\u00e9s' },
+    { key: 'unlocked', label: 'Débloqués' },
   ]
 
   const renderEmptyState = (type: TabType) => {
     const messages: Record<TabType, { title: string; desc: string }> = {
-      reading: { title: "Tu n'as pas commenc\u00e9 de lecture", desc: 'Explore le catalogue pour commencer' },
-      favorites: { title: 'Aucun favori', desc: 'Ajoute des livres \u00e0 tes favoris' },
-      unlocked: { title: 'Aucun livre d\u00e9bloqu\u00e9', desc: 'D\u00e9bloque des livres premium avec tes \u00e9toiles' },
+      reading: { title: "Tu n'as pas commencé de lecture", desc: 'Explore le catalogue pour commencer' },
+      favorites: { title: 'Aucun favori', desc: 'Ajoute des livres à tes favoris' },
+      unlocked: { title: 'Aucun livre débloqué', desc: 'Débloque des livres premium avec tes étoiles' },
     }
     const msg = messages[type]
     return (
@@ -90,7 +90,7 @@ export default function LibraryScreen() {
                   </div>
                 )}
                 {activeTab === 'unlocked' && (
-                  <p className="text-[10px] text-[#6B7280] font-inter mt-1">D\u00e9bloqu\u00e9 r\u00e9cemment</p>
+                  <p className="text-[10px] text-[#6B7280] font-inter mt-1">Débloqué récemment</p>
                 )}
               </div>
               {activeTab === 'favorites' && (
@@ -120,7 +120,7 @@ export default function LibraryScreen() {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <Lock className="w-12 h-12 text-[#6B7280] mb-4" />
-        <p className="text-sm font-poppins text-[#1A1A2E] text-center">Connecte-toi pour acc\u00e9der \u00e0 ta biblioth\u00e8que</p>
+        <p className="text-sm font-poppins text-[#1A1A2E] text-center">Connecte-toi pour accéder à ta bibliothèque</p>
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => navigate('/login')}
@@ -136,7 +136,7 @@ export default function LibraryScreen() {
     <div className="min-h-full pb-4">
       {/* Header */}
       <div className="px-4 pt-4 pb-2">
-        <h1 className="font-poppins font-bold text-xl text-[#1A1A2E]">Ma Biblioth\u00e8que</h1>
+        <h1 className="font-poppins font-bold text-xl text-[#1A1A2E]">Ma Bibliothèque</h1>
       </div>
 
       {/* Reading Stats Card */}

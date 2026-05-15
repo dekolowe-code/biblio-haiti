@@ -28,7 +28,7 @@ export default function ProfileScreen() {
   }
 
   const handleReset = () => {
-    if (window.confirm('Voulez-vous vraiment r\u00e9initialiser toutes vos donn\u00e9es?')) {
+    if (window.confirm('Voulez-vous vraiment réinitialiser toutes vos données?')) {
       clearAllData()
       window.location.reload()
     }
@@ -42,7 +42,7 @@ export default function ProfileScreen() {
         </div>
         <h2 className="font-poppins font-bold text-xl text-[#1A1A2E] text-center">Bienvenue sur Biblio-Haiti</h2>
         <p className="text-sm text-[#6B7280] font-inter text-center mt-2">
-          Connecte-toi pour acc\u00e9der \u00e0 ta biblioth\u00e8que et gagner des \u00e9toiles
+          Connecte-toi pour accéder à ta bibliothèque et gagner des étoiles
         </p>
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -56,7 +56,7 @@ export default function ProfileScreen() {
           onClick={() => navigate('/register')}
           className="w-full mt-3 py-3 border-2 border-[#C41E3A] rounded-xl text-[#C41E3A] font-poppins font-semibold text-sm"
         >
-          Cr\u00e9er un compte
+          Créer un compte
         </motion.button>
       </div>
     )
@@ -64,17 +64,17 @@ export default function ProfileScreen() {
 
   const stats = [
     { icon: BookOpen, value: libraryCount, label: 'Livres lus', color: '#2EC4B6' },
-    { icon: Star, value: stars, label: '\u00c9toiles', color: '#FAA307' },
+    { icon: Star, value: stars, label: 'Étoiles', color: '#FAA307' },
     { icon: Trophy, value: quizCount, label: 'Quiz', color: '#E85D04' },
     { icon: Heart, value: favCount, label: 'Favoris', color: '#9D4EDD' },
   ]
 
   const menuItems = [
     { icon: User, label: 'Mon Compte', action: () => {} },
-    { icon: History, label: 'Historique des \u00c9toiles', action: () => {} },
-    { icon: Settings, label: 'Param\u00e8tres', action: () => {} },
+    { icon: History, label: 'Historique des Étoiles', action: () => {} },
+    { icon: Settings, label: 'Paramètres', action: () => {} },
     { icon: HelpCircle, label: 'Aide & Support', action: () => {} },
-    { icon: Info, label: '\u00c0 Propos', action: () => {} },
+    { icon: Info, label: 'À Propos', action: () => {} },
   ]
 
   return (
@@ -141,7 +141,7 @@ export default function ProfileScreen() {
             <div className="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
               <LogOut className="w-4 h-4 text-[#C41E3A]" />
             </div>
-            <span className="flex-1 text-sm font-inter text-[#C41E3A]">Se d\u00e9connecter</span>
+            <span className="flex-1 text-sm font-inter text-[#C41E3A]">Se déconnecter</span>
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.98 }}
@@ -151,7 +151,7 @@ export default function ProfileScreen() {
             <div className="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
               <Info className="w-4 h-4 text-red-600" />
             </div>
-            <span className="flex-1 text-sm font-inter text-red-600">R\u00e9initialiser les donn\u00e9es</span>
+            <span className="flex-1 text-sm font-inter text-red-600">Réinitialiser les données</span>
           </motion.button>
         </div>
       </div>

@@ -38,7 +38,7 @@ export default function ReadingScreen() {
   }, [showControls])
 
   if (!book) {
-    return <div className="flex items-center justify-center h-screen text-[#6B7280]">Livre non trouv\u00e9</div>
+    return <div className="flex items-center justify-center h-screen text-[#6B7280]">Livre non trouvé</div>
   }
 
   const totalPages = book.pages
@@ -108,11 +108,11 @@ export default function ReadingScreen() {
             </div>
             {/* Theme */}
             <div className="flex items-center gap-3">
-              <span className="text-xs font-inter">Th\u00e8me</span>
+              <span className="text-xs font-inter">Thème</span>
               <div className="flex gap-2">
                 {[
                   { value: 'white' as Theme, icon: Sun, label: 'Clair' },
-                  { value: 'sepia' as Theme, icon: Sun, label: 'S\u00e9pia' },
+                  { value: 'sepia' as Theme, icon: Sun, label: 'Sépia' },
                   { value: 'dark' as Theme, icon: Moon, label: 'Sombre' },
                 ].map(t => (
                   <button

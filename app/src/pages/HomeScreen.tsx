@@ -38,7 +38,7 @@ export default function HomeScreen() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#9B1B30]/60 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <p className="font-poppins font-semibold text-sm text-white text-shadow">
-            Exploration & Culture Ha\u00eftienne
+            Exploration & Culture Haïtienne
           </p>
         </div>
         {/* Carousel dots */}
@@ -59,7 +59,7 @@ export default function HomeScreen() {
           className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FAA307] to-[#E85D04] border-[3px] border-white shadow-[0_4px_12px_rgba(250,163,7,0.3)] flex flex-col items-center justify-center cursor-pointer"
         >
           <span className="font-poppins font-extrabold text-lg text-white leading-none">{stars}</span>
-          <span className="text-[9px] text-white font-inter mt-0.5">\u00c9toiles</span>
+          <span className="text-[9px] text-white font-inter mt-0.5">Étoiles</span>
         </motion.div>
       </div>
 
@@ -95,7 +95,7 @@ export default function HomeScreen() {
       {/* New Arrivals */}
       <div className="mt-6 px-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-poppins font-semibold text-base text-[#1A1A2E]">Nouveaut\u00e9s</h2>
+          <h2 className="font-poppins font-semibold text-base text-[#1A1A2E]">Nouveautés</h2>
           <button
             onClick={() => navigate('/catalogue')}
             className="flex items-center gap-0.5 text-[#C41E3A] text-xs font-poppins font-medium"
@@ -126,8 +126,8 @@ export default function HomeScreen() {
                 <Trophy className="w-5 h-5 text-[#FAA307]" />
               </div>
               <div>
-                <p className="font-poppins font-bold text-sm text-white">Gagne des \u00c9toiles!</p>
-                <p className="text-[10px] text-white/80">Joue et gagne des r\u00e9compenses</p>
+                <p className="font-poppins font-bold text-sm text-white">Gagne des Étoiles!</p>
+                <p className="text-[10px] text-white/80">Joue et gagne des récompenses</p>
               </div>
             </div>
             <div className="bg-gradient-to-r from-[#FAA307] to-[#E85D04] rounded-xl px-4 py-2 flex items-center gap-1.5 shadow-lg">
@@ -154,7 +154,7 @@ export default function HomeScreen() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E] truncate">{quiz.title}</h3>
-                <p className="text-[10px] text-[#6B7280]">{quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'} \u2022 {quiz.questions.length} questions</p>
+                <p className="text-[10px] text-[#6B7280]">{quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'} • {quiz.questions.length} questions</p>
               </div>
               <div className="flex items-center gap-1 bg-[#FFF8F0] rounded-full px-2 py-1 flex-shrink-0">
                 <Zap className="w-3 h-3 text-[#FAA307]" />

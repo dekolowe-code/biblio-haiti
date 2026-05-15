@@ -3,7 +3,7 @@ import { BookOpen, FlaskConical, Baby, Bookmark, Clock, Palette } from 'lucide-r
 import { useNavigate } from 'react-router'
 
 const iconMap: Record<string, React.ElementType> = {
-  'Litt\u00e9rature': BookOpen,
+  'Littérature': BookOpen,
   'Sciences': FlaskConical,
   'Jeunesse': Baby,
   'Contes': Bookmark,

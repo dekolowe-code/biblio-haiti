@@ -81,7 +81,7 @@ export default function CatalogueScreen() {
               onClick={() => { setSelectedCountry(''); setSelectedCategory(''); setSelectedStyle(''); setAccessFilter('all') }}
               className="text-xs text-[#C41E3A] font-inter font-medium"
             >
-              R\u00e9initialiser
+              Réinitialiser
             </button>
           </div>
         )}
@@ -98,7 +98,7 @@ export default function CatalogueScreen() {
         {filteredBooks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <Search className="w-12 h-12 text-[#6B7280] mb-3" />
-            <p className="text-sm text-[#6B7280] font-inter">Aucun r\u00e9sultat trouv\u00e9</p>
+            <p className="text-sm text-[#6B7280] font-inter">Aucun résultat trouvé</p>
             <p className="text-xs text-[#6B7280] font-inter mt-1">Essayez d'autres filtres</p>
           </div>
         )}
@@ -132,7 +132,7 @@ export default function CatalogueScreen() {
                       onClick={() => { setSelectedCountry(''); setSelectedCategory(''); setSelectedStyle(''); setAccessFilter('all') }}
                       className="text-xs text-[#6B7280] font-inter"
                     >
-                      R\u00e9initialiser
+                      Réinitialiser
                     </button>
                     <button
                       onClick={() => setShowFilters(false)}
@@ -163,7 +163,7 @@ export default function CatalogueScreen() {
 
                 {/* Category */}
                 <div>
-                  <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E] mb-2">Cat\u00e9gorie</h3>
+                  <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E] mb-2">Catégorie</h3>
                   <div className="flex flex-wrap gap-2">
                     {categories.map(c => (
                       <button
@@ -195,7 +195,7 @@ export default function CatalogueScreen() {
 
                 {/* Access */}
                 <div>
-                  <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E] mb-2">Acc\u00e8s</h3>
+                  <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E] mb-2">Accès</h3>
                   <div className="flex gap-2">
                     {[
                       { value: 'all', label: 'Tous' },

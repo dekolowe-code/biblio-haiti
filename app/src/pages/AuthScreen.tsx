@@ -29,7 +29,7 @@ export default function AuthScreen() {
     }
 
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caract\u00e8res')
+      setError('Le mot de passe doit contenir au moins 6 caractères')
       setLoading(false)
       return
     }
@@ -50,7 +50,7 @@ export default function AuthScreen() {
       if (success) {
         navigate('/')
       } else {
-        setError('Une erreur est survenue. R\u00e9essayez.')
+        setError('Une erreur est survenue. Réessayez.')
       }
     } catch {
       setError('Une erreur est survenue')
@@ -89,7 +89,7 @@ export default function AuthScreen() {
             </svg>
           </div>
           <h1 className="font-poppins font-bold text-2xl text-white text-shadow">Biblio-Haiti</h1>
-          <p className="text-sm text-white/80 font-inter mt-1">Ta biblioth\u00e8que culturelle</p>
+          <p className="text-sm text-white/80 font-inter mt-1">Ta bibliothèque culturelle</p>
         </motion.div>
 
         {/* Form Card */}
@@ -100,7 +100,7 @@ export default function AuthScreen() {
           className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-xl"
         >
           <h2 className="font-poppins font-bold text-lg text-[#1A1A2E] text-center mb-4">
-            {isRegister ? 'Cr\u00e9er un compte' : 'Se connecter'}
+            {isRegister ? 'Créer un compte' : 'Se connecter'}
           </h2>
 
           {error && (
@@ -158,7 +158,7 @@ export default function AuthScreen() {
               disabled={loading}
               className="w-full h-11 gradient-teal rounded-xl text-white font-poppins font-bold text-sm disabled:opacity-50"
             >
-              {loading ? 'Chargement...' : isRegister ? 'CR\u00c9ER MON COMPTE' : 'SE CONNECTER'}
+              {loading ? 'Chargement...' : isRegister ? 'CRÉER MON COMPTE' : 'SE CONNECTER'}
             </motion.button>
           </form>
 
@@ -172,12 +172,12 @@ export default function AuthScreen() {
             onClick={() => navigate(isRegister ? '/login' : '/register')}
             className="w-full text-center text-sm text-[#C41E3A] font-inter font-medium"
           >
-            {isRegister ? 'D\u00e9j\u00e0 un compte? Se connecter' : 'Cr\u00e9er un compte'}
+            {isRegister ? 'Déjà un compte? Se connecter' : 'Créer un compte'}
           </button>
 
           {!isRegister && (
             <button className="w-full text-center text-xs text-[#6B7280] font-inter mt-2">
-              Mot de passe oubli\u00e9?
+              Mot de passe oublié?
             </button>
           )}
         </motion.div>

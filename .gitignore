@@ -12,6 +12,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.pdf
+*.epub
 
 # Virtual environments
 venv/

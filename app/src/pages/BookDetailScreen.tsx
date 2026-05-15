@@ -22,7 +22,7 @@ export default function BookDetailScreen() {
   if (!book) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-[#6B7280] font-inter">Livre non trouv\u00e9</p>
+        <p className="text-[#6B7280] font-inter">Livre non trouvé</p>
       </div>
     )
   }
@@ -33,7 +33,7 @@ export default function BookDetailScreen() {
       return
     }
     if (stars < book.unlockCost) {
-      setToast({ message: '\u00c9toiles insuffisantes! Joue au quiz pour en gagner.', type: 'error' })
+      setToast({ message: 'Étoiles insuffisantes! Joue au quiz pour en gagner.', type: 'error' })
       setTimeout(() => setToast(null), 3000)
       return
     }
@@ -50,7 +50,7 @@ export default function BookDetailScreen() {
       return
     }
     toggleFavorite(book.id)
-    setToast({ message: isFavorite ? 'Retir\u00e9 des favoris' : 'Ajout\u00e9 aux favoris', type: 'success' })
+    setToast({ message: isFavorite ? 'Retiré des favoris' : 'Ajouté aux favoris', type: 'success' })
     setTimeout(() => setToast(null), 2000)
   }
 
@@ -181,17 +181,17 @@ export default function BookDetailScreen() {
               <>
                 <Lock className="w-5 h-5 text-white" />
                 <Star className="w-4 h-4 text-white fill-white" />
-                <span className="font-poppins font-bold text-sm text-white">D\u00c9BLOQUER \u2605 {book.unlockCost}</span>
+                <span className="font-poppins font-bold text-sm text-white">DÉBLOQUER ★ {book.unlockCost}</span>
               </>
             ) : (
-              <span className="font-poppins font-bold text-sm text-white">\u2605 INSUFFISANT</span>
+              <span className="font-poppins font-bold text-sm text-white">★ INSUFFISANT</span>
             )}
           </motion.button>
         )}
 
         {stars < book.unlockCost && !isUnlocked && (
           <p className="text-center text-xs text-[#FAA307] font-inter">
-            Gagne plus d'\u00e9toiles en jouant aux quiz!
+            Gagne plus d'étoiles en jouant aux quiz!
           </p>
         )}
 
@@ -236,7 +236,7 @@ export default function BookDetailScreen() {
                 transition={{ delay: 0.3 }}
                 className="font-poppins font-bold text-xl text-[#1A1A2E] mt-4"
               >
-                D\u00c9BLOQU\u00c9!
+                DÉBLOQUÉ!
               </motion.h2>
               <motion.p
                 initial={{ y: 20, opacity: 0 }}

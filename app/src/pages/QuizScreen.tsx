@@ -29,8 +29,8 @@ function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>
   return (
     <div className="min-h-full pb-4">
       <div className="px-4 pt-4 pb-2">
-        <h1 className="font-poppins font-bold text-xl text-[#1A1A2E]">Gagne des \u00c9toiles</h1>
-        <p className="text-xs text-[#6B7280] font-inter mt-1">Teste tes connaissances et gagne des r\u00e9compenses</p>
+        <h1 className="font-poppins font-bold text-xl text-[#1A1A2E]">Gagne des Étoiles</h1>
+        <p className="text-xs text-[#6B7280] font-inter mt-1">Teste tes connaissances et gagne des récompenses</p>
       </div>
 
       {/* Daily Bonus */}
@@ -59,7 +59,7 @@ function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>
       <div className="px-4 mt-4 flex items-center gap-2">
         <Star className="w-5 h-5 text-[#FAA307] fill-[#FAA307]" />
         <span className="font-poppins font-bold text-lg text-[#1A1A2E]">{stars}</span>
-        <span className="text-xs text-[#6B7280] font-inter">\u00e9toiles disponibles</span>
+        <span className="text-xs text-[#6B7280] font-inter">étoiles disponibles</span>
       </div>
 
       {/* Quiz List */}
@@ -80,7 +80,7 @@ function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>
                 <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E]">{quiz.title}</h3>
                 <p className="text-[10px] text-[#6B7280] font-inter mt-0.5">
                   {quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
-                  {' \u2022 '}
+                  {' • '}
                   {quiz.questions.length} questions
                 </p>
               </div>
@@ -169,7 +169,7 @@ function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: Return
   }, [selectedAnswer, currentQuestion, quiz, score, quizId])
 
   if (!quiz) {
-    return <div className="flex items-center justify-center h-64 text-[#6B7280]">Quiz non trouv\u00e9</div>
+    return <div className="flex items-center justify-center h-64 text-[#6B7280]">Quiz non trouvé</div>
   }
 
   // Quiz Intro Screen
@@ -186,7 +186,7 @@ function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: Return
           </div>
           <h2 className="font-poppins font-bold text-xl text-[#1A1A2E] text-center">{quiz.title}</h2>
           <p className="text-sm text-[#6B7280] font-inter text-center mt-2">
-            Teste tes connaissances en {quiz.category.toLowerCase()} et gagne des \u00e9toiles!
+            Teste tes connaissances en {quiz.category.toLowerCase()} et gagne des étoiles!
           </p>
           <div className="flex items-center justify-center gap-2 mt-3">
             <span className={`px-3 py-1 rounded-full text-xs font-inter ${quiz.difficulty === 'easy' ? 'bg-green-100 text-green-700' : quiz.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
@@ -198,7 +198,7 @@ function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: Return
           </div>
           <div className="flex items-center justify-center gap-1 mt-4 bg-[#FFF8F0] rounded-xl py-2">
             <Star className="w-4 h-4 text-[#FAA307] fill-[#FAA307]" />
-            <span className="font-poppins font-bold text-sm text-[#FAA307]">\u2605 {quiz.starReward} \u00e9toiles \u00e0 gagner</span>
+            <span className="font-poppins font-bold text-sm text-[#FAA307]">★ {quiz.starReward} étoiles à gagner</span>
           </div>
           <motion.button
             whileTap={{ scale: 0.98 }}
@@ -250,7 +250,7 @@ function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: Return
             className="flex items-center justify-center gap-2 mt-3"
           >
             <Star className="w-6 h-6 text-[#FAA307] fill-[#FAA307]" />
-            <span className="font-poppins font-bold text-xl text-[#FAA307]">\u2605 +{earnedStars} \u00e9toiles gagn\u00e9es!</span>
+            <span className="font-poppins font-bold text-xl text-[#FAA307]">★ +{earnedStars} étoiles gagnées!</span>
           </motion.div>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
@@ -259,8 +259,8 @@ function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: Return
             className="text-sm text-[#6B7280] font-inter mt-2"
           >
             {score === quiz.questions.length ? 'Parfait! Tu es un expert!' :
-              score >= quiz.questions.length / 2 ? 'Bon travail! Continue comme \u00e7a!' :
-                'Continue \u00e0 apprendre!'}
+              score >= quiz.questions.length / 2 ? 'Bon travail! Continue comme ça!' :
+                'Continue à apprendre!'}
           </motion.p>
           <motion.div
             initial={{ y: 30, opacity: 0 }}
