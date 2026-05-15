@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 350 76% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 350 76% 44%;
+    --radius: 0.75rem;
+
+    /* Biblio-Haiti Custom Colors */
+    --crimson: #C41E3A;
+    --deep-red: #9B1B30;
+    --sunset-orange: #E85D04;
+    --golden-yellow: #FAA307;
+    --teal: #2EC4B6;
+    --purple-accent: #9D4EDD;
+    --pink-accent: #FF6B9D;
+    --green-accent: #38B000;
+    --blue-accent: #3A86FF;
+    --dark-text: #1A1A2E;
+    --muted-text: #6B7280;
+    --off-white: #FFF8F0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(180deg, #9B1B30 0%, #C41E3A 30%, #E85D04 70%, #FAA307 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+@layer utilities {
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+  .font-merriweather {
+    font-family: 'Merriweather', serif;
+  }
+  .gradient-bg {
+    background: linear-gradient(180deg, #9B1B30 0%, #C41E3A 30%, #E85D04 70%, #FAA307 100%);
+  }
+  .gradient-nav {
+    background: linear-gradient(90deg, #9B1B30 0%, #C41E3A 50%, #E85D04 100%);
+  }
+  .gradient-top {
+    background: linear-gradient(180deg, #9B1B30 0%, #C41E3A 100%);
+  }
+  .gradient-golden {
+    background: linear-gradient(135deg, #FAA307 0%, #E85D04 100%);
+  }
+  .gradient-teal {
+    background: linear-gradient(135deg, #2EC4B6 0%, #1a9e92 100%);
+  }
+  .text-shadow {
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
