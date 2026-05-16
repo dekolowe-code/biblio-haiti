@@ -63,12 +63,14 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const unlockBook = async (bookId: string, cost: number) => {
+  const unlockBook = async (bookId: string, cost: number, title: string = '') => {
     if (!user || user.starsBalance < cost) return false
     
+    // Deduct stars
+    await updateStars(-cost, `Livre débloqué: ${title || bookId}`)
+
     const success = await dbUnlockBook(bookId)
     if (success) {
-      updateStars(-cost)
       setLibrary(prev => {
         const existing = prev.find(ub => ub.bookId === bookId)
         if (existing) {
@@ -76,9 +78,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         }
         return [...prev, { bookId, isUnlocked: true, isFavorite: false, currentPage: 0, isFinished: false }]
       })
-      return true
     }
-    return false
+    return success
   }
 
   const updateProgress = async (bookId: string, page: number, finished: boolean = false) => {

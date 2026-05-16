@@ -6,6 +6,7 @@ import { uploadBook } from '@/lib/bookService'
 import { countries, categories } from '@/data/mockData'
 import { useAuth } from '@/context/AuthContext'
 import { toast } from 'sonner'
+import QuizUploadForm from '@/components/dashboard/QuizUploadForm'
 
 export default function DashboardScreen() {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState<'book' | 'quiz'>('book')
 
   const [formData, setFormData] = useState({
     title: '',
@@ -126,22 +128,41 @@ export default function DashboardScreen() {
               <Plus className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="font-poppins font-bold text-base text-[#1A1A2E]">Ajouter un Livre</h2>
-              <p className="text-xs text-[#6B7280] font-inter">Envoyez vos ouvrages sur la plateforme</p>
+              <h2 className="font-poppins font-bold text-base text-[#1A1A2E]">Ajouter du contenu</h2>
+              <p className="text-xs text-[#6B7280] font-inter">Envoyez vos ouvrages et quiz sur la plateforme</p>
             </div>
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl flex items-center gap-2 mb-4 text-xs font-inter">
-              <AlertCircle className="w-4 h-4" /> {error}
-            </div>
-          )}
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-lg mb-6">
+            <button
+              onClick={() => setActiveTab('book')}
+              className={`flex-1 py-2 rounded-md text-sm font-semibold font-inter transition-all ${activeTab === 'book' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Livre
+            </button>
+            <button
+              onClick={() => setActiveTab('quiz')}
+              className={`flex-1 py-2 rounded-md text-sm font-semibold font-inter transition-all ${activeTab === 'quiz' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Quiz
+            </button>
+          </div>
 
-          {success && (
-            <div className="bg-green-50 border border-green-100 text-green-600 p-3 rounded-xl flex items-center gap-2 mb-4 text-xs font-inter">
-              <Check className="w-4 h-4" /> Livre ajouté avec succès!
-            </div>
-          )}
+          {activeTab === 'quiz' ? (
+            <QuizUploadForm />
+          ) : (
+            <>
+              {error && (
+                <div className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl flex items-center gap-2 mb-4 text-xs font-inter">
+                  <AlertCircle className="w-4 h-4" /> {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="bg-green-50 border border-green-100 text-green-600 p-3 rounded-xl flex items-center gap-2 mb-4 text-xs font-inter">
+                  <Check className="w-4 h-4" /> Livre ajouté avec succès!
+                </div>
+              )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -342,15 +363,16 @@ export default function DashboardScreen() {
               </div>
             </div>
 
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              disabled={loading}
+            <button
               type="submit"
-              className="w-full py-3 bg-[#1A1A2E] text-white rounded-xl font-poppins font-bold text-sm shadow-lg shadow-blue-900/10 disabled:opacity-50 mt-4"
+              disabled={loading}
+              className={`w-full h-12 rounded-xl text-white font-poppins font-bold text-sm mt-6 flex items-center justify-center gap-2 ${loading ? 'bg-blue-400' : 'bg-blue-600'}`}
             >
-              {loading ? 'ENVOI EN COURS...' : 'AJOUTER L\'OUVRAGE'}
-            </motion.button>
+              {loading ? 'Envoi en cours...' : 'Publier le livre'}
+            </button>
           </form>
+          </>
+          )}
         </motion.div>
       </div>
     </div>

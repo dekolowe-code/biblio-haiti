@@ -46,9 +46,13 @@ export async function uploadBook(bookData: Partial<Book>, coverFile?: File, book
   let epubUrl = bookData.epubUrl
 
   if (coverFile) {
-    const { data } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('book-assets')
       .upload(`covers/${Date.now()}_${coverFile.name}`, coverFile)
+    if (error) {
+      console.error('Error uploading cover:', error)
+      return { data: null, error: new Error('Erreur lors de l\'upload de la couverture. Vérifiez que le bucket book-assets existe et est public.') }
+    }
     if (data) {
       const { data: { publicUrl } } = supabase.storage.from('book-assets').getPublicUrl(data.path)
       coverUrl = publicUrl
@@ -57,9 +61,13 @@ export async function uploadBook(bookData: Partial<Book>, coverFile?: File, book
 
   if (bookFile) {
     const folder = bookData.type === 'pdf' ? 'pdfs' : 'epubs'
-    const { data } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('book-assets')
       .upload(`${folder}/${Date.now()}_${bookFile.name}`, bookFile)
+    if (error) {
+      console.error('Error uploading book file:', error)
+      return { data: null, error: new Error('Erreur lors de l\'upload du fichier. Vérifiez que le bucket book-assets existe et est public.') }
+    }
     if (data) {
       const { data: { publicUrl } } = supabase.storage.from('book-assets').getPublicUrl(data.path)
       if (bookData.type === 'pdf') pdfUrl = publicUrl

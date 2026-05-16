@@ -58,7 +58,7 @@ export default function BookDetailScreen() {
       setTimeout(() => setToast(null), 3000)
       return
     }
-    const success = await unlockBook(book.id, book.unlockCost)
+    const success = await unlockBook(book.id, book.unlockCost, book.title)
     if (success) {
       setShowUnlockAnimation(true)
       setTimeout(() => setShowUnlockAnimation(false), 2000)

@@ -4,31 +4,31 @@ import { useNavigate } from 'react-router'
 import { Trophy, Zap, ChevronRight } from 'lucide-react'
 import BookCard from '@/components/BookCard'
 import CategoryPill from '@/components/CategoryPill'
-import { categories, getStoredStars, quizzes, type Book, books as mockBooks } from '@/data/mockData'
+import { categories, type Book, books as mockBooks } from '@/data/mockData'
 import { getAllBooks } from '@/lib/bookService'
+import { getQuizzes, type Quiz } from '@/lib/quizService'
+import { useAuth } from '@/context/AuthContext'
 
 export default function HomeScreen() {
   const navigate = useNavigate()
-  const [stars, setStars] = useState(getStoredStars())
+  const { user } = useAuth()
+  const stars = user?.starsBalance || 0
   const [heroIndex, setHeroIndex] = useState(0)
   const [books, setBooks] = useState<Book[]>(mockBooks)
+  const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const pourToiRef = useRef<HTMLDivElement>(null)
   const recentBooksRef = useRef<HTMLDivElement>(null)
   const categoryRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     getAllBooks().then(setBooks)
+    getQuizzes().then(all => setQuizzes(all.slice(0, 3))) // Show only top 3 on home
   }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
       setHeroIndex(prev => (prev + 1) % 3)
     }, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
-    const interval = setInterval(() => setStars(getStoredStars()), 1000)
     return () => clearInterval(interval)
   }, [])
 

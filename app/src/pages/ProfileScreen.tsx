@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useLibrary } from '@/context/LibraryContext'
 import { clearAllData } from '@/data/mockData'
 import { supabase } from '@/lib/supabase'
+import { getStarHistory, getCompletedQuizzes, type StarTransaction } from '@/lib/starService'
 import { toast } from 'sonner'
 
 interface ModalProps {
@@ -53,7 +54,6 @@ export default function ProfileScreen() {
   const { library } = useLibrary()
   const stars = user?.starsBalance || 0
   const libraryCount = library.filter(ub => ub.isFinished).length
-  const quizCount = 0 // Quiz results not yet synced to Supabase
   const favCount = library.filter(ub => ub.isFavorite).length
 
   // Modals state
@@ -62,15 +62,19 @@ export default function ProfileScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [starHistory, setStarHistory] = useState<StarTransaction[]>([])
+  const [quizCount, setQuizCount] = useState(0)
 
   useEffect(() => {
     if (user) {
       setEditName(user.displayName)
+      getStarHistory().then(setStarHistory)
+      getCompletedQuizzes().then(quizzes => setQuizCount(quizzes.length))
     }
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview)
     }
-  }, [user, avatarPreview])
+  }, [user, avatarPreview, activeModal])
 
   const handleLogout = () => {
     logout()
@@ -335,24 +339,27 @@ export default function ProfileScreen() {
       {/* History Modal */}
       <Modal isOpen={activeModal === 'history'} onClose={() => setActiveModal(null)} title="Historique des Étoiles">
         <div className="space-y-3 pb-6 max-h-[60vh] overflow-y-auto">
-          {[
-            { label: 'Bonus de bienvenue', stars: 50, date: 'Aujourd\'hui', type: 'plus' },
-            { label: 'Quiz complété: Histoire', stars: 25, date: 'Hier', type: 'plus' },
-            { label: 'Livre débloqué: La Danse', stars: 0, date: 'Hier', type: 'neutral' },
-            ... (quizCount > 0 ? [{ label: 'Récompense Quiz', stars: 15, date: 'Récemment', type: 'plus' }] : [])
-          ].map((item, i) => (
-            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <div>
-                <p className="text-sm font-poppins font-semibold text-[#1A1A2E]">{item.label}</p>
-                <p className="text-[10px] text-gray-400 font-inter">{item.date}</p>
-              </div>
-              <div className={`flex items-center gap-1 font-poppins font-bold text-sm ${item.type === 'plus' ? 'text-green-500' : 'text-gray-400'}`}>
-                {item.type === 'plus' ? '+' : ''}{item.stars} <Star className="w-3 h-3 fill-current" />
-              </div>
-            </div>
-          ))}
-          {quizCount === 0 && (
-            <p className="text-center text-xs text-gray-400 font-inter py-4">Joue à des quiz pour gagner plus d'étoiles !</p>
+          {starHistory.length === 0 ? (
+            <div className="text-center text-sm text-gray-500 py-4">Aucune transaction récente</div>
+          ) : (
+            starHistory.map((item) => {
+              const dateObj = new Date(item.created_at)
+              const today = new Date()
+              const isToday = dateObj.getDate() === today.getDate() && dateObj.getMonth() === today.getMonth() && dateObj.getFullYear() === today.getFullYear()
+              const dateStr = isToday ? "Aujourd'hui" : dateObj.toLocaleDateString()
+              
+              return (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="text-sm font-poppins font-semibold text-[#1A1A2E]">{item.description}</p>
+                    <p className="text-[10px] text-gray-400 font-inter">{dateStr}</p>
+                  </div>
+                  <div className={`flex items-center gap-1 font-poppins font-bold text-sm ${item.type === 'plus' ? 'text-green-500' : item.type === 'minus' ? 'text-red-500' : 'text-gray-400'}`}>
+                    {item.type === 'plus' ? '+' : item.type === 'minus' ? '-' : ''}{item.amount} <Star className="w-3 h-3 fill-current" />
+                  </div>
+                </div>
+              )
+            })
           )}
         </div>
       </Modal>

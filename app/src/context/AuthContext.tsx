@@ -16,7 +16,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   register: (email: string, password: string, displayName: string) => Promise<boolean>
   logout: () => void
-  updateStars: (amount: number) => void
+  updateStars: (amount: number, description: string) => Promise<void>
   updateProfile: (updates: Partial<AuthUser>) => Promise<boolean>
 }
 
@@ -109,6 +109,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         display_name: displayName,
         stars_balance: 100,
       })
+      // Add welcome bonus transaction
+      await supabase.from('star_transactions').insert({
+        user_id: data.user.id,
+        amount: 100,
+        description: 'Bonus de bienvenue',
+        type: 'plus'
+      })
     }
     
     return true
@@ -119,13 +126,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
-  const updateStars = async (amount: number) => {
+  const updateStars = async (amount: number, description: string) => {
     if (!user) return
     const newBalance = user.starsBalance + amount
     setUser(prev => prev ? { ...prev, starsBalance: newBalance } : null)
     
-    // Update in Supabase
+    // Update in Supabase profiles
     await supabase.from('profiles').update({ stars_balance: newBalance }).eq('id', user.id)
+    
+    // Log transaction
+    await supabase.from('star_transactions').insert({
+      user_id: user.id,
+      amount: Math.abs(amount),
+      description: description,
+      type: amount > 0 ? 'plus' : amount < 0 ? 'minus' : 'neutral'
+    })
   }
 
   const updateProfile = async (updates: Partial<AuthUser>) => {

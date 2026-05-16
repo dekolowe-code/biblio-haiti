@@ -2,8 +2,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Home, Search, Bookmark, User, BookOpen, Star, SearchIcon } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { getStoredStars } from '@/data/mockData'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 const tabs = [
   { path: '/', label: 'Accueil', icon: Home },
@@ -16,17 +15,10 @@ export default function MobileShell({ children }: { children: React.ReactNode })
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [stars, setStars] = useState(getStoredStars())
+  const stars = user?.starsBalance || 0
 
   const isAuthScreen = location.pathname === '/login' || location.pathname === '/register'
   const isReadingScreen = location.pathname.includes('/read')
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStars(getStoredStars())
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
 
   if (isAuthScreen || isReadingScreen) {
     return (

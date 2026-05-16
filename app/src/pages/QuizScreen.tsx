@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import { Trophy, Star, ChevronRight, RotateCcw, Home, Zap, Check, X } from 'lucide-react'
-import { quizzes, addQuizResult, getQuizResults, getStoredStars } from '@/data/mockData'
+import { getCompletedQuizzes, saveQuizResult } from '@/lib/starService'
+import { getQuizzes, type Quiz } from '@/lib/quizService'
 import { useAuth } from '@/context/AuthContext'
 
 export default function QuizScreen() {
@@ -14,17 +15,21 @@ export default function QuizScreen() {
     return <QuizList navigate={navigate} user={user} />
   }
 
-  return <QuizPlay quizId={quizId} navigate={navigate} user={user} />
+  return <QuizPlay quizId={quizId} navigate={navigate} />
 }
 
 function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>; user: any }) {
-  const [stars, setStars] = useState(getStoredStars())
-  const completedQuizzes = getQuizResults()
+  const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([])
+  const [quizzes, setQuizzes] = useState<Quiz[]>([])
 
   useEffect(() => {
-    const interval = setInterval(() => setStars(getStoredStars()), 1000)
-    return () => clearInterval(interval)
-  }, [])
+    if (user) {
+      getCompletedQuizzes().then(setCompletedQuizzes)
+      getQuizzes().then(setQuizzes)
+    }
+  }, [user])
+
+  const stars = user?.starsBalance || 0
 
   return (
     <div className="min-h-full pb-4">
@@ -71,25 +76,27 @@ function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>
               key={quiz.id}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(`/quiz/${quiz.id}`)}
-              className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center gap-3 cursor-pointer ${isCompleted ? 'opacity-60' : ''}`}
+              className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center gap-3 cursor-pointer ${isCompleted ? 'opacity-70 bg-gray-50' : ''}`}
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3A86FF] to-[#7209B7] flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-6 h-6 text-white" />
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-gray-300' : 'bg-gradient-to-br from-[#3A86FF] to-[#7209B7]'}`}>
+                <Trophy className={`w-6 h-6 ${isCompleted ? 'text-gray-500' : 'text-white'}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-poppins font-semibold text-sm text-[#1A1A2E]">{quiz.title}</h3>
+                <h3 className={`font-poppins font-semibold text-sm ${isCompleted ? 'text-gray-600' : 'text-[#1A1A2E]'}`}>{quiz.title}</h3>
                 <p className="text-[10px] text-[#6B7280] font-inter mt-0.5">
                   {quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
                   {' • '}
                   {quiz.questions.length} questions
                 </p>
+                {isCompleted && (
+                  <span className="inline-block mt-1 bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-md border border-green-200">COMPLÉTÉ</span>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <div className="flex items-center gap-0.5 bg-[#FFF8F0] rounded-full px-2 py-1">
-                  <Star className="w-3 h-3 text-[#FAA307] fill-[#FAA307]" />
-                  <span className="text-[10px] font-poppins font-bold text-[#FAA307]">+{quiz.starReward}</span>
+                <div className={`flex items-center gap-0.5 rounded-full px-2 py-1 ${isCompleted ? 'bg-gray-200' : 'bg-[#FFF8F0]'}`}>
+                  <Star className={`w-3 h-3 ${isCompleted ? 'text-gray-500 fill-gray-500' : 'text-[#FAA307] fill-[#FAA307]'}`} />
+                  <span className={`text-[10px] font-poppins font-bold ${isCompleted ? 'text-gray-500' : 'text-[#FAA307]'}`}>+{quiz.starReward}</span>
                 </div>
-                {isCompleted && <Check className="w-5 h-5 text-green-500" />}
                 {!isCompleted && <ChevronRight className="w-4 h-4 text-[#6B7280]" />}
               </div>
             </motion.div>
@@ -112,61 +119,67 @@ function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>
   )
 }
 
-function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: ReturnType<typeof useNavigate>; user: any }) {
-  const quiz = quizzes.find(q => q.id === quizId)
+function QuizPlay({ quizId, navigate }: { quizId: string; navigate: ReturnType<typeof useNavigate> }) {
+  const { user, updateStars } = useAuth()
+  const [quiz, setQuiz] = useState<Quiz | null>(null)
+  const [isCompleted, setIsCompleted] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [showResult] = useState(false)
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(15)
   const [isFinished, setIsFinished] = useState(false)
   const [earnedStars, setEarnedStars] = useState(0)
 
   useEffect(() => {
-    if (!hasStarted || isFinished || showResult) return
+    getQuizzes().then(all => {
+      const found = all.find(q => q.id === quizId)
+      if (found) setQuiz(found)
+    })
+    getCompletedQuizzes().then(completed => {
+      if (completed.includes(quizId)) setIsCompleted(true)
+    })
+  }, [quizId])
+
+  useEffect(() => {
+    if (!hasStarted || isFinished) return
     if (timeLeft <= 0) {
       handleAnswer(-1)
       return
     }
     const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000)
     return () => clearTimeout(timer)
-  }, [timeLeft, hasStarted, isFinished, showResult])
-
-  const handleStart = () => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    setHasStarted(true)
-    setTimeLeft(15)
-  }
+  }, [timeLeft, hasStarted, isFinished])
 
   const handleAnswer = useCallback((answerIndex: number) => {
-    if (selectedAnswer !== null) return
+    if (selectedAnswer !== null || !quiz) return
     setSelectedAnswer(answerIndex)
 
-    const question = quiz?.questions[currentQuestion]
-    if (!question) return
-
+    const question = quiz.questions[currentQuestion]
     const isCorrect = answerIndex === question.correctIndex
     if (isCorrect) setScore(s => s + 1)
 
     setTimeout(() => {
-      if (currentQuestion < (quiz?.questions.length || 0) - 1) {
+      if (currentQuestion < quiz.questions.length - 1) {
         setCurrentQuestion(c => c + 1)
         setSelectedAnswer(null)
         setTimeLeft(15)
       } else {
         const finalScore = isCorrect ? score + 1 : score
-        const totalQuestions = quiz?.questions.length || 1
-        const earned = quiz ? Math.round((finalScore / totalQuestions) * quiz.starReward) : 0
+        const earned = (!isCompleted) ? Math.round((finalScore / quiz.questions.length) * quiz.starReward) : 0
         setEarnedStars(earned)
         setIsFinished(true)
-        addQuizResult(quizId, earned)
+        
+        if (!isCompleted) {
+          saveQuizResult(quizId, earned).then(success => {
+            if (success && earned > 0 && user) {
+               updateStars(earned, `Récompense Quiz: ${quiz.title}`)
+            }
+          })
+        }
       }
     }, 1500)
-  }, [selectedAnswer, currentQuestion, quiz, score, quizId])
+  }, [selectedAnswer, currentQuestion, quiz, score, quizId, user, updateStars, isCompleted])
 
   if (!quiz) {
     return <div className="flex items-center justify-center h-64 text-[#6B7280]">Quiz non trouvé</div>
@@ -196,13 +209,31 @@ function QuizPlay({ quizId, navigate, user }: { quizId: string; navigate: Return
               {quiz.questions.length} questions
             </span>
           </div>
-          <div className="flex items-center justify-center gap-1 mt-4 bg-[#FFF8F0] rounded-xl py-2">
-            <Star className="w-4 h-4 text-[#FAA307] fill-[#FAA307]" />
-            <span className="font-poppins font-bold text-sm text-[#FAA307]">★ {quiz.starReward} étoiles à gagner</span>
-          </div>
+
+          {isCompleted && (
+            <div className="mt-4 bg-yellow-50 text-yellow-800 border border-yellow-200 p-3 rounded-xl text-xs font-inter text-center">
+              <Check className="w-4 h-4 mx-auto mb-1 text-yellow-600" />
+              Vous avez déjà complété ce quiz. Vous pouvez le refaire, mais vous ne gagnerez pas de nouvelles étoiles.
+            </div>
+          )}
+
+          {!isCompleted && (
+            <div className="flex items-center justify-center gap-1 mt-4 bg-[#FFF8F0] rounded-xl py-2">
+              <Star className="w-4 h-4 text-[#FAA307] fill-[#FAA307]" />
+              <span className="font-poppins font-bold text-sm text-[#FAA307]">★ {quiz.starReward} étoiles à gagner</span>
+            </div>
+          )}
+
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={handleStart}
+            onClick={() => {
+              if (!user) {
+                navigate('/login')
+                return
+              }
+              setHasStarted(true)
+              setTimeLeft(15)
+            }}
             className="w-full mt-4 py-3 gradient-teal rounded-xl text-white font-poppins font-bold text-sm"
           >
             COMMENCER
