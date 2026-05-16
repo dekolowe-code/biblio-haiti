@@ -51,13 +51,32 @@ const PDFReader: React.FC<PDFReaderProps> = ({ fileUrl, onPageChange, initialPag
     }
   }
 
-  const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3.0))
-  const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5))
-  const resetZoom = () => setScale(1.0)
+  const [showControls, setShowControls] = useState(true)
+  const hideTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showAndScheduleHide = () => {
+    setShowControls(true)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+  }
+
+  useEffect(() => {
+    // Auto-hide after 3s on mount
+    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
+  }, [])
+
+  const zoomIn = () => { setScale(prev => Math.min(prev + 0.2, 3.0)); showAndScheduleHide() }
+  const zoomOut = () => { setScale(prev => Math.max(prev - 0.2, 0.5)); showAndScheduleHide() }
+  const resetZoom = () => { setScale(1.0); showAndScheduleHide() }
 
   return (
     <div className="pdf-reader-simple relative flex flex-col items-center justify-center w-full h-full overflow-hidden">
-      <div className="flex-1 w-full flex items-center justify-center overflow-auto no-scrollbar py-4 px-2">
+      {/* Tap anywhere on PDF to show controls */}
+      <div
+        className="flex-1 w-full flex items-center justify-center overflow-auto no-scrollbar py-4 px-2"
+        onClick={showAndScheduleHide}
+      >
         <Document
           file={fileUrl}
           onLoadSuccess={onDocumentLoadSuccess}
@@ -88,18 +107,26 @@ const PDFReader: React.FC<PDFReaderProps> = ({ fileUrl, onPageChange, initialPag
         </Document>
       </div>
 
-        {/* Navigation Overlays (Click left/right side to turn) */}
+      {/* Navigation Overlays (Click left/right side to turn) */}
         <div 
           className="absolute inset-y-0 left-0 w-1/4 cursor-pointer z-10" 
-          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber - 1); }}
+          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber - 1); showAndScheduleHide() }}
         />
         <div 
           className="absolute inset-y-0 right-0 w-1/4 cursor-pointer z-10" 
-          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber + 1); }}
+          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber + 1); showAndScheduleHide() }}
         />
 
-      {/* Floating Controls */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border border-white/50 z-50">
+      {/* Floating Controls — bottom of screen, auto-hides */}
+      <AnimatePresence>
+        {showControls && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border border-white/50 z-50"
+          >
         <div className="flex items-center gap-1 border-r border-gray-200 pr-3 mr-1">
           <button onClick={zoomOut} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
             <ZoomOut className="w-5 h-5 text-[#1A1A2E]" />
@@ -139,7 +166,9 @@ const PDFReader: React.FC<PDFReaderProps> = ({ fileUrl, onPageChange, initialPag
         >
           <ChevronRight className="w-6 h-6" />
         </button>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -4,7 +4,8 @@ import { useSearchParams } from 'react-router'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import BookCard from '@/components/BookCard'
 import { countries, categories, styles, type Book, books as mockBooks } from '@/data/mockData'
-import { getAllBooks } from '@/lib/bookService'
+import { getPaginatedBooks } from '@/lib/bookService'
+import { Loader2 } from 'lucide-react'
 
 export default function CatalogueScreen() {
   const [searchParams] = useSearchParams()
@@ -15,33 +16,62 @@ export default function CatalogueScreen() {
   const [selectedCountry, setSelectedCountry] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory)
   const [selectedStyle, setSelectedStyle] = useState<string>('')
-  const [accessFilter, setAccessFilter] = useState<string>('all') // all, free, premium
+  const [accessFilter, setAccessFilter] = useState<string>('all')
   const [books, setBooks] = useState<Book[]>(mockBooks)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
 
   useEffect(() => {
-    if (initialCategory) {
-      setSelectedCategory(initialCategory)
-    }
+    if (initialCategory) setSelectedCategory(initialCategory)
   }, [initialCategory])
 
+  // Reload when filters change
   useEffect(() => {
-    getAllBooks().then(setBooks)
-  }, [])
-
-  const filteredBooks = useMemo(() => {
-    return books.filter(book => {
-      const matchesSearch = !searchQuery ||
-        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCountry = !selectedCountry || book.country === selectedCountry
-      const matchesCategory = !selectedCategory || book.category === selectedCategory
-      const matchesStyle = !selectedStyle || book.style === selectedStyle
-      const matchesAccess = accessFilter === 'all' ||
-        (accessFilter === 'free' && !book.isPremium) ||
-        (accessFilter === 'premium' && book.isPremium)
-      return matchesSearch && matchesCountry && matchesCategory && matchesStyle && matchesAccess
+    setPage(0)
+    setBooks(mockBooks)
+    setInitialLoading(true)
+    const isPremium = accessFilter === 'all' ? undefined : accessFilter === 'premium'
+    getPaginatedBooks(0, {
+      search: searchQuery || undefined,
+      category: selectedCategory || undefined,
+      country: selectedCountry || undefined,
+      style: selectedStyle || undefined,
+      isPremium,
+    }).then(result => {
+      setBooks(prev => {
+        // Keep mock books + new server books
+        const serverBooks = result.data
+        if (!searchQuery && !selectedCategory && !selectedCountry && !selectedStyle && accessFilter === 'all') {
+          return [...mockBooks, ...serverBooks]
+        }
+        // When filtering, only server results
+        return serverBooks
+      })
+      setHasMore(result.hasMore)
+      setTotal(result.total)
+      setInitialLoading(false)
     })
-  }, [searchQuery, selectedCountry, selectedCategory, selectedStyle, accessFilter, books])
+  }, [searchQuery, selectedCategory, selectedCountry, selectedStyle, accessFilter])
+
+  const loadMore = async () => {
+    setLoadingMore(true)
+    const nextPage = page + 1
+    const isPremium = accessFilter === 'all' ? undefined : accessFilter === 'premium'
+    const result = await getPaginatedBooks(nextPage, {
+      search: searchQuery || undefined,
+      category: selectedCategory || undefined,
+      country: selectedCountry || undefined,
+      style: selectedStyle || undefined,
+      isPremium,
+    })
+    setBooks(prev => [...prev, ...result.data])
+    setHasMore(result.hasMore)
+    setPage(nextPage)
+    setLoadingMore(false)
+  }
 
   const activeFilters = [
     selectedCountry && { label: selectedCountry, onRemove: () => setSelectedCountry('') },
@@ -105,18 +135,40 @@ export default function CatalogueScreen() {
 
       {/* Book Grid */}
       <div className="px-4 py-4">
-        <p className="text-xs text-[#6B7280] font-inter mb-3">{filteredBooks.length} livre{filteredBooks.length !== 1 ? 's' : ''}</p>
-        <div className="grid grid-cols-3 gap-3">
-          {filteredBooks.map(book => (
-            <BookCard key={book.id} book={book} compact />
-          ))}
-        </div>
-        {filteredBooks.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Search className="w-12 h-12 text-[#6B7280] mb-3" />
-            <p className="text-sm text-[#6B7280] font-inter">Aucun résultat trouvé</p>
-            <p className="text-xs text-[#6B7280] font-inter mt-1">Essayez d'autres filtres</p>
+        <p className="text-xs text-[#6B7280] font-inter mb-3">
+          {total > 0 ? `${total} livre${total !== 1 ? 's' : ''}` : `${books.length} livre${books.length !== 1 ? 's' : ''}`}
+        </p>
+        {initialLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-[#C41E3A] animate-spin" />
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              {books.map(book => (
+                <BookCard key={book.id} book={book} compact />
+              ))}
+            </div>
+            {books.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Search className="w-12 h-12 text-[#6B7280] mb-3" />
+                <p className="text-sm text-[#6B7280] font-inter">Aucun résultat trouvé</p>
+                <p className="text-xs text-[#6B7280] font-inter mt-1">Essayez d'autres filtres</p>
+              </div>
+            )}
+            {hasMore && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#C41E3A] text-white rounded-xl text-sm font-poppins font-semibold shadow-md disabled:opacity-60"
+                >
+                  {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {loadingMore ? 'Chargement...' : 'Charger plus'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
-import { Trophy, Star, ChevronRight, RotateCcw, Home, Zap, Check, X } from 'lucide-react'
+import { Trophy, Star, ChevronRight, RotateCcw, Home, Zap, Check, X, Loader2 } from 'lucide-react'
 import { getCompletedQuizzes, saveQuizResult } from '@/lib/starService'
-import { getQuizzes, type Quiz } from '@/lib/quizService'
+import { getPaginatedQuizzes, getQuizzes, type Quiz } from '@/lib/quizService'
 import { useAuth } from '@/context/AuthContext'
 
 export default function QuizScreen() {
@@ -21,13 +21,32 @@ export default function QuizScreen() {
 function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>; user: any }) {
   const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([])
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
 
   useEffect(() => {
     if (user) {
       getCompletedQuizzes().then(setCompletedQuizzes)
-      getQuizzes().then(setQuizzes)
     }
+    // Load first page regardless of login status
+    getPaginatedQuizzes(0).then(result => {
+      setQuizzes(result.data)
+      setHasMore(result.hasMore)
+      setInitialLoading(false)
+    })
   }, [user])
+
+  const loadMore = async () => {
+    setLoadingMore(true)
+    const nextPage = page + 1
+    const result = await getPaginatedQuizzes(nextPage)
+    setQuizzes(prev => [...prev, ...result.data])
+    setHasMore(result.hasMore)
+    setPage(nextPage)
+    setLoadingMore(false)
+  }
 
   const stars = user?.starsBalance || 0
 
@@ -69,39 +88,65 @@ function QuizList({ navigate, user }: { navigate: ReturnType<typeof useNavigate>
 
       {/* Quiz List */}
       <div className="px-4 mt-4 space-y-3">
-        {quizzes.map(quiz => {
-          const isCompleted = completedQuizzes.includes(quiz.id)
-          return (
-            <motion.div
-              key={quiz.id}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/quiz/${quiz.id}`)}
-              className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center gap-3 cursor-pointer ${isCompleted ? 'opacity-70 bg-gray-50' : ''}`}
-            >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-gray-300' : 'bg-gradient-to-br from-[#3A86FF] to-[#7209B7]'}`}>
-                <Trophy className={`w-6 h-6 ${isCompleted ? 'text-gray-500' : 'text-white'}`} />
+        {initialLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-[#FAA307] animate-spin" />
+          </div>
+        ) : quizzes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Trophy className="w-12 h-12 text-gray-300 mb-3" />
+            <p className="text-sm text-[#6B7280] font-inter">Aucun quiz disponible pour le moment</p>
+            <p className="text-xs text-[#6B7280] font-inter mt-1">Revenez bientôt !</p>
+          </div>
+        ) : (
+          <>
+            {quizzes.map(quiz => {
+              const isCompleted = completedQuizzes.includes(quiz.id)
+              return (
+                <motion.div
+                  key={quiz.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(`/quiz/${quiz.id}`)}
+                  className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center gap-3 cursor-pointer ${isCompleted ? 'opacity-70 bg-gray-50' : ''}`}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-gray-300' : 'bg-gradient-to-br from-[#3A86FF] to-[#7209B7]'}`}>
+                    <Trophy className={`w-6 h-6 ${isCompleted ? 'text-gray-500' : 'text-white'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-poppins font-semibold text-sm ${isCompleted ? 'text-gray-600' : 'text-[#1A1A2E]'}`}>{quiz.title}</h3>
+                    <p className="text-[10px] text-[#6B7280] font-inter mt-0.5">
+                      {quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
+                      {' • '}
+                      {quiz.questions.length} questions
+                    </p>
+                    {isCompleted && (
+                      <span className="inline-block mt-1 bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-md border border-green-200">COMPLÉTÉ</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className={`flex items-center gap-0.5 rounded-full px-2 py-1 ${isCompleted ? 'bg-gray-200' : 'bg-[#FFF8F0]'}`}>
+                      <Star className={`w-3 h-3 ${isCompleted ? 'text-gray-500 fill-gray-500' : 'text-[#FAA307] fill-[#FAA307]'}`} />
+                      <span className={`text-[10px] font-poppins font-bold ${isCompleted ? 'text-gray-500' : 'text-[#FAA307]'}`}>+{quiz.starReward}</span>
+                    </div>
+                    {!isCompleted && <ChevronRight className="w-4 h-4 text-[#6B7280]" />}
+                  </div>
+                </motion.div>
+              )
+            })}
+            {hasMore && (
+              <div className="flex justify-center mt-4 pb-4">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#3A86FF] to-[#7209B7] text-white rounded-xl text-sm font-poppins font-semibold shadow-md disabled:opacity-60"
+                >
+                  {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {loadingMore ? 'Chargement...' : 'Voir plus de quiz'}
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className={`font-poppins font-semibold text-sm ${isCompleted ? 'text-gray-600' : 'text-[#1A1A2E]'}`}>{quiz.title}</h3>
-                <p className="text-[10px] text-[#6B7280] font-inter mt-0.5">
-                  {quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
-                  {' • '}
-                  {quiz.questions.length} questions
-                </p>
-                {isCompleted && (
-                  <span className="inline-block mt-1 bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-md border border-green-200">COMPLÉTÉ</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <div className={`flex items-center gap-0.5 rounded-full px-2 py-1 ${isCompleted ? 'bg-gray-200' : 'bg-[#FFF8F0]'}`}>
-                  <Star className={`w-3 h-3 ${isCompleted ? 'text-gray-500 fill-gray-500' : 'text-[#FAA307] fill-[#FAA307]'}`} />
-                  <span className={`text-[10px] font-poppins font-bold ${isCompleted ? 'text-gray-500' : 'text-[#FAA307]'}`}>+{quiz.starReward}</span>
-                </div>
-                {!isCompleted && <ChevronRight className="w-4 h-4 text-[#6B7280]" />}
-              </div>
-            </motion.div>
-          )
-        })}
+            )}
+          </>
+        )}
       </div>
 
       {!user && (
