@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Upload, Book, FileText, Check, AlertCircle, ArrowLeft } from 'lucide-react'
+import { Plus, Upload, Book, Check, AlertCircle, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { uploadBook } from '@/lib/bookService'
-import { countries, categories, styles } from '@/data/mockData'
+import { countries, categories } from '@/data/mockData'
 import { useAuth } from '@/context/AuthContext'
 import { toast } from 'sonner'
 

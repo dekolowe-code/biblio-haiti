@@ -58,8 +58,9 @@ export default function ReadingScreen() {
     return <div className="flex items-center justify-center h-screen text-[#6B7280]">Livre non trouvé</div>
   }
 
+  const currentPageNumber = typeof currentPage === 'number' ? currentPage : 0
   const totalPages = book.pages
-  const progress = totalPages > 0 ? ((currentPage + 1) / totalPages) * 100 : 0
+  const progress = totalPages > 0 ? ((currentPageNumber + 1) / totalPages) * 100 : 0
 
   const themeStyles: Record<Theme, { bg: string; text: string }> = {
     white: { bg: 'bg-white', text: 'text-[#1A1A2E]' },
@@ -197,18 +198,20 @@ export default function ReadingScreen() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-inter">Page {currentPage + 1} sur {totalPages}</span>
+                <span className="text-xs font-inter">
+                  {typeof currentPage === 'number' ? `Page ${currentPage + 1} sur ${totalPages}` : 'Lecture en cours'}
+                </span>
                 <div className="flex gap-4">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentPage(Math.max(0, currentPage - 1)) }}
-                    disabled={currentPage === 0}
+                    onClick={(e) => { e.stopPropagation(); if (typeof currentPage === 'number') setCurrentPage(Math.max(0, currentPage - 1)) }}
+                    disabled={typeof currentPage !== 'number' || currentPage === 0}
                     className="w-8 h-8 flex items-center justify-center disabled:opacity-30"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentPage(Math.min(totalPages - 1, currentPage + 1)) }}
-                    disabled={currentPage >= totalPages - 1}
+                    onClick={(e) => { e.stopPropagation(); if (typeof currentPage === 'number') setCurrentPage(Math.min(totalPages - 1, currentPage + 1)) }}
+                    disabled={typeof currentPage !== 'number' || currentPage >= totalPages - 1}
                     className="w-8 h-8 flex items-center justify-center disabled:opacity-30"
                   >
                     <ChevronRight className="w-5 h-5" />

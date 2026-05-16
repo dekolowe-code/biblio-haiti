@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, Star, Trophy, Heart, Settings, HelpCircle, Info, LogOut, ChevronRight, User, History, X, Check, ExternalLink, MessageCircle } from 'lucide-react'
+import { BookOpen, Star, Trophy, Heart, Settings, Info, LogOut, ChevronRight, User, History, X, Check, ExternalLink, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLibrary } from '@/context/LibraryContext'
 import { clearAllData } from '@/data/mockData'
@@ -50,7 +50,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => (
 export default function ProfileScreen() {
   const navigate = useNavigate()
   const { user, logout, updateProfile, isLoading } = useAuth()
-  const { library, isLoading: isLibLoading } = useLibrary()
+  const { library } = useLibrary()
   const stars = user?.starsBalance || 0
   const libraryCount = library.filter(ub => ub.isFinished).length
   const quizCount = 0 // Quiz results not yet synced to Supabase
@@ -60,7 +60,6 @@ export default function ProfileScreen() {
   const [activeModal, setActiveModal] = useState<'account' | 'history' | 'about' | null>(null)
   const [editName, setEditName] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [uploadStatus, setUploadStatus] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
@@ -92,7 +91,6 @@ export default function ProfileScreen() {
 
   const handleSaveAccount = async () => {
     setIsSaving(true)
-    setUploadStatus('Préparation...')
     let avatarUrl = user?.avatarUrl || ''
 
     try {
@@ -100,7 +98,6 @@ export default function ProfileScreen() {
         if (avatarFile.size > 5 * 1024 * 1024) {
           throw new Error('Image trop lourde (max 5Mo)')
         }
-        setUploadStatus('Envoi de l\'image...')
         const fileExt = avatarFile.name.split('.').pop()
         const fileName = `${user?.id}_${Math.random()}.${fileExt}`
         const { data, error: uploadError } = await supabase.storage
@@ -113,7 +110,6 @@ export default function ProfileScreen() {
         avatarUrl = publicUrl
       }
 
-      setUploadStatus('Finalisation...')
       const success = await updateProfile({ displayName: editName, avatarUrl })
       if (success) {
         toast.success('Profil mis à jour !')
@@ -128,7 +124,6 @@ export default function ProfileScreen() {
       toast.error(`Erreur: ${err.message || 'Problème lors de l\'enregistrement'}`)
     } finally {
       setIsSaving(false)
-      setUploadStatus('')
     }
   }
 

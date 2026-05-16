@@ -46,7 +46,7 @@ export async function uploadBook(bookData: Partial<Book>, coverFile?: File, book
   let epubUrl = bookData.epubUrl
 
   if (coverFile) {
-    const { data, error } = await supabase.storage
+    const { data } = await supabase.storage
       .from('book-assets')
       .upload(`covers/${Date.now()}_${coverFile.name}`, coverFile)
     if (data) {
@@ -57,7 +57,7 @@ export async function uploadBook(bookData: Partial<Book>, coverFile?: File, book
 
   if (bookFile) {
     const folder = bookData.type === 'pdf' ? 'pdfs' : 'epubs'
-    const { data, error } = await supabase.storage
+    const { data } = await supabase.storage
       .from('book-assets')
       .upload(`${folder}/${Date.now()}_${bookFile.name}`, bookFile)
     if (data) {

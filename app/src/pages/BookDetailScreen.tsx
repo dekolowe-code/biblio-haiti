@@ -26,8 +26,7 @@ export default function BookDetailScreen() {
     })
   }, [bookId])
 
-  const { library, isFavorite, isUnlocked: checkUnlocked, toggleFavorite, unlockBook } = useLibrary()
-  const userBook = library.find(ub => ub.bookId === bookId)
+  const { isFavorite, isUnlocked: checkUnlocked, toggleFavorite, unlockBook } = useLibrary()
   const isUnlocked = checkUnlocked(bookId!) || !book?.isPremium
   const favorite = isFavorite(bookId!)
   const stars = user?.starsBalance || 0

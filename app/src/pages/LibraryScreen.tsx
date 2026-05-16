@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { BookOpen, Heart, Lock, Trash2 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLibrary } from '@/context/LibraryContext'
+import { toast } from 'sonner'
 import { type Book, books as mockBooks } from '@/data/mockData'
 import { getAllBooks } from '@/lib/bookService'
 
@@ -13,7 +14,7 @@ export default function LibraryScreen() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('reading')
-  const { library, isLoading } = useLibrary()
+  const { library } = useLibrary()
   const [books, setBooks] = useState<Book[]>(mockBooks)
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function LibraryScreen() {
 
   const getBook = (bookId: string) => books.find(b => b.id === bookId)
 
-  const handleDelete = (bookId: string) => {
+  const handleDelete = (_bookId: string) => {
     // Delete logic not yet synced to Supabase (can be added to LibraryContext if needed)
     toast.info('Fonctionnalité non disponible en mode synchro')
   }
