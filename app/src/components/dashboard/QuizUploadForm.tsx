@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { AlertCircle, Check, Loader2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { uploadQuiz, type QuizQuestion } from '@/lib/quizService'

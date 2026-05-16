@@ -2,7 +2,6 @@ import { useLocation, useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Home, Search, Bookmark, User, BookOpen, Star, SearchIcon } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useState } from 'react'
 
 const tabs = [
   { path: '/', label: 'Accueil', icon: Home },

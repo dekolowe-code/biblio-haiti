@@ -11,7 +11,7 @@ interface LibraryContextType {
   isUnlocked: (bookId: string) => boolean
   getReadingProgress: (bookId: string) => number
   toggleFavorite: (bookId: string) => Promise<void>
-  unlockBook: (bookId: string, cost: number) => Promise<boolean>
+  unlockBook: (bookId: string, cost: number, title?: string) => Promise<boolean>
   updateProgress: (bookId: string, page: number, finished?: boolean) => Promise<void>
   refreshLibrary: () => Promise<void>
 }

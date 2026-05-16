@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'react-router'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
@@ -41,7 +41,7 @@ export default function CatalogueScreen() {
       style: selectedStyle || undefined,
       isPremium,
     }).then(result => {
-      setBooks(prev => {
+      setBooks(_prev => {
         // Keep mock books + new server books
         const serverBooks = result.data
         if (!searchQuery && !selectedCategory && !selectedCountry && !selectedStyle && accessFilter === 'all') {
