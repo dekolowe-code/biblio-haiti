@@ -246,7 +246,6 @@ export const quizzes: Quiz[] = [
   },
 ]
 
-// Local storage helpers
 const STORAGE_KEYS = {
   USER: 'bibliohaiti_user',
   STARS: 'bibliohaiti_stars',

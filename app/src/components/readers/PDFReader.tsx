@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 
-// Set worker path
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
 interface PDFReaderProps {
@@ -17,155 +16,177 @@ interface PDFReaderProps {
 const PDFReader: React.FC<PDFReaderProps> = ({ fileUrl, onPageChange, initialPage = 0 }) => {
   const [numPages, setNumPages] = useState<number>(0)
   const [pageNumber, setPageNumber] = useState<number>(initialPage + 1)
-  const [containerWidth, setContainerWidth] = useState<number>(350)
-  const [containerHeight, setContainerHeight] = useState<number>(window.innerHeight * 0.8)
+  const [pageWidth, setPageWidth] = useState<number>(300)
   const [scale, setScale] = useState<number>(1.0)
- 
-  useEffect(() => {
-    setPageNumber(initialPage + 1)
-  }, [initialPage])
+  const [showControls, setShowControls] = useState(true)
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages)
-  }
+  const lastPinchDist = useRef<number | null>(null)
+  const lastScaleRef = useRef<number>(1.0)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setPageNumber(initialPage + 1) }, [initialPage])
 
   useEffect(() => {
-    const updateDimensions = () => {
-      // Available height is screen - top toolbar (64) - bottom toolbar (80)
-      const availableHeight = window.innerHeight - 144
-      setContainerHeight(availableHeight * 0.95)
-      
-      const width = window.innerWidth > 430 ? 380 : window.innerWidth - 40
-      setContainerWidth(width)
+    const update = () => {
+      const padding = 16
+      const maxWidth = Math.min(window.innerWidth - padding * 2, 420)
+      setPageWidth(maxWidth)
     }
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-    return () => window.removeEventListener('resize', updateDimensions)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  const showAndScheduleHide = useCallback(() => {
+    setShowControls(true)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+  }, [])
+
+  useEffect(() => {
+    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
   }, [])
 
   const goToPage = (num: number) => {
     const newPage = Math.max(1, Math.min(numPages, num))
     setPageNumber(newPage)
-    if (onPageChange) {
-      onPageChange(newPage - 1)
-    }
+    onPageChange?.(newPage - 1)
+    showAndScheduleHide()
   }
 
-  const [showControls, setShowControls] = useState(true)
-  const hideTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const applyScale = (next: number) => {
+    const clamped = Math.max(0.5, Math.min(3.0, next))
+    setScale(clamped)
+    lastScaleRef.current = clamped
+  }
 
-  const showAndScheduleHide = () => {
-    setShowControls(true)
-    if (hideTimer.current) clearTimeout(hideTimer.current)
-    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+  // Pinch-to-zoom
+  const getPinchDist = (e: TouchEvent) => {
+    const [t1, t2] = [e.touches[0], e.touches[1]]
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY)
   }
 
   useEffect(() => {
-    // Auto-hide after 3s on mount
-    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
-    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
-  }, [])
+    const el = containerRef.current
+    if (!el) return
 
-  const zoomIn = () => { setScale(prev => Math.min(prev + 0.2, 3.0)); showAndScheduleHide() }
-  const zoomOut = () => { setScale(prev => Math.max(prev - 0.2, 0.5)); showAndScheduleHide() }
-  const resetZoom = () => { setScale(1.0); showAndScheduleHide() }
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) lastPinchDist.current = getPinchDist(e)
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && lastPinchDist.current !== null) {
+        e.preventDefault()
+        const dist = getPinchDist(e)
+        const delta = dist / lastPinchDist.current
+        lastPinchDist.current = dist
+        applyScale(lastScaleRef.current * delta)
+        showAndScheduleHide()
+      }
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) lastPinchDist.current = null
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [showAndScheduleHide])
 
   return (
-    <div className="pdf-reader-simple relative flex flex-col items-center justify-center w-full h-full overflow-hidden">
-      {/* Tap anywhere on PDF to show controls */}
+    <div
+      ref={containerRef}
+      className="pdf-reader-simple relative flex flex-col w-full h-full overflow-hidden bg-[#1a1a1a]"
+      onClick={showAndScheduleHide}
+    >
+      {/* PDF Viewport */}
       <div
-        className="flex-1 w-full flex items-center justify-center overflow-auto no-scrollbar py-4 px-2"
-        onClick={showAndScheduleHide}
+        className="flex-1 w-full overflow-auto no-scrollbar flex items-start justify-center py-3"
+        style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
       >
         <Document
           file={fileUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          loading={<div className="text-sm font-inter">Chargement du livre...</div>}
-          error={<div className="text-sm font-inter text-red-500">Erreur lors du chargement du PDF</div>}
-          className="flex justify-center"
+          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+          loading={<div className="flex items-center justify-center h-full text-white/60 text-sm font-inter pt-20">Chargement du livre...</div>}
+          error={<div className="flex items-center justify-center h-full text-red-400 text-sm font-inter pt-20">Erreur lors du chargement du PDF</div>}
         >
           <AnimatePresence mode="wait">
             <motion.div
               key={pageNumber}
-              initial={{ x: 50, opacity: 0 }}
+              initial={{ x: 40, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -50, opacity: 0 }}
+              exit={{ x: -40, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="bg-white shadow-2xl rounded-sm overflow-hidden"
-              style={{ scale }}
+              style={{
+                transformOrigin: 'top center',
+                transform: `scale(${scale})`,
+                marginBottom: scale < 1 ? `${(1 - scale) * -200}px` : 0,
+              }}
+              className="shadow-2xl rounded-sm overflow-hidden"
             >
-              <Page 
-                pageNumber={pageNumber} 
-                height={containerHeight}
-                scale={1} // We use CSS scale for smoother animation but can also use scale prop
+              <Page
+                pageNumber={pageNumber}
+                width={pageWidth}
                 renderAnnotationLayer={false}
                 renderTextLayer={false}
-                loading={<div style={{ width: containerWidth, height: containerHeight }} />}
               />
             </motion.div>
           </AnimatePresence>
         </Document>
       </div>
 
-      {/* Navigation Overlays (Click left/right side to turn) */}
-        <div 
-          className="absolute inset-y-0 left-0 w-1/4 cursor-pointer z-10" 
-          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber - 1); showAndScheduleHide() }}
-        />
-        <div 
-          className="absolute inset-y-0 right-0 w-1/4 cursor-pointer z-10" 
-          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber + 1); showAndScheduleHide() }}
-        />
+      {/* Tap zones left/right to flip pages */}
+      <div
+        className="absolute inset-y-0 left-0 w-1/4 z-10"
+        onClick={(e) => { e.stopPropagation(); goToPage(pageNumber - 1) }}
+      />
+      <div
+        className="absolute inset-y-0 right-0 w-1/4 z-10"
+        onClick={(e) => { e.stopPropagation(); goToPage(pageNumber + 1) }}
+      />
 
-      {/* Floating Controls — bottom of screen, auto-hides */}
+      {/* Minimal page indicator — auto-hides */}
       <AnimatePresence>
         {showControls && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border border-white/50 z-50"
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.18 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl z-50"
+            onClick={(e) => e.stopPropagation()}
           >
-        <div className="flex items-center gap-1 border-r border-gray-200 pr-3 mr-1">
-          <button onClick={zoomOut} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-            <ZoomOut className="w-5 h-5 text-[#1A1A2E]" />
-          </button>
-          <button onClick={resetZoom} className="px-2 py-1 hover:bg-gray-100 rounded-lg transition-colors text-[10px] font-bold font-poppins">
-            {Math.round(scale * 100)}%
-          </button>
-          <button onClick={zoomIn} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-            <ZoomIn className="w-5 h-5 text-[#1A1A2E]" />
-          </button>
-        </div>
+            <button
+              onClick={() => goToPage(pageNumber - 1)}
+              disabled={pageNumber <= 1}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors disabled:opacity-25"
+            >
+              <ChevronLeft className="w-5 h-5 text-white" />
+            </button>
 
-        <button
-          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber - 1); }}
-          disabled={pageNumber <= 1}
-          className="p-1.5 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-20"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] font-poppins font-bold text-[#1A1A2E]">
-            {pageNumber} / {numPages}
-          </span>
-          <div className="w-16 h-1 bg-gray-100 rounded-full mt-0.5 overflow-hidden">
-            <div 
-              className="h-full bg-[#C41E3A] transition-all duration-300" 
-              style={{ width: `${(pageNumber / numPages) * 100}%` }}
-            />
-          </div>
-        </div>
+            <div className="flex flex-col items-center min-w-[60px]">
+              <span className="text-[11px] font-poppins font-bold text-white">{pageNumber} / {numPages}</span>
+              <div className="w-14 h-0.5 bg-white/20 rounded-full mt-1 overflow-hidden">
+                <div
+                  className="h-full bg-[#FAA307] transition-all duration-300"
+                  style={{ width: `${(pageNumber / numPages) * 100}%` }}
+                />
+              </div>
+            </div>
 
-        <button
-          onClick={(e) => { e.stopPropagation(); goToPage(pageNumber + 1); }}
-          disabled={pageNumber >= numPages}
-          className="p-1.5 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-20"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
+            <button
+              onClick={() => goToPage(pageNumber + 1)}
+              disabled={pageNumber >= numPages}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors disabled:opacity-25"
+            >
+              <ChevronRight className="w-5 h-5 text-white" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
