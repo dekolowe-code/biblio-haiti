@@ -1,15 +1,24 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router'
 import { Trophy, Zap, ChevronRight } from 'lucide-react'
 import BookCard from '@/components/BookCard'
 import CategoryPill from '@/components/CategoryPill'
-import { books, categories, getStoredStars, quizzes } from '@/data/mockData'
+import { categories, getStoredStars, quizzes, type Book, books as mockBooks } from '@/data/mockData'
+import { getAllBooks } from '@/lib/bookService'
 
 export default function HomeScreen() {
   const navigate = useNavigate()
   const [stars, setStars] = useState(getStoredStars())
   const [heroIndex, setHeroIndex] = useState(0)
+  const [books, setBooks] = useState<Book[]>(mockBooks)
+  const pourToiRef = useRef<HTMLDivElement>(null)
+  const recentBooksRef = useRef<HTMLDivElement>(null)
+  const categoryRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    getAllBooks().then(setBooks)
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,30 +32,88 @@ export default function HomeScreen() {
     return () => clearInterval(interval)
   }, [])
 
+  // Auto-scroll logic for horizontal lists
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Scroll "Pour toi"
+      if (pourToiRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = pourToiRef.current
+        if (scrollLeft + clientWidth >= scrollWidth - 5) {
+          pourToiRef.current.scrollTo({ left: 0, behavior: 'smooth' })
+        } else {
+          pourToiRef.current.scrollBy({ left: 150, behavior: 'smooth' })
+        }
+      }
+      
+      // Scroll "Nouveautés" (with a slight delay or different timing for variety)
+      setTimeout(() => {
+        if (recentBooksRef.current) {
+          const { scrollLeft, scrollWidth, clientWidth } = recentBooksRef.current
+          if (scrollLeft + clientWidth >= scrollWidth - 5) {
+            recentBooksRef.current.scrollTo({ left: 0, behavior: 'smooth' })
+          } else {
+            recentBooksRef.current.scrollBy({ left: 150, behavior: 'smooth' })
+          }
+        }
+      }, 1000)
+
+      // Scroll "Categories" (faster)
+      setTimeout(() => {
+        if (categoryRef.current) {
+          const { scrollLeft, scrollWidth, clientWidth } = categoryRef.current
+          if (scrollLeft + clientWidth >= scrollWidth - 5) {
+            categoryRef.current.scrollTo({ left: 0, behavior: 'smooth' })
+          } else {
+            categoryRef.current.scrollBy({ left: 120, behavior: 'smooth' })
+          }
+        }
+      }, 500)
+    }, 4000) // Slightly faster overall interval
+    return () => clearInterval(interval)
+  }, [])
+
+  const heroImages = [
+    '/hero-banner.jpg',
+    'https://images.unsplash.com/photo-1550399105-c4db5fb85c18?q=80&w=2071&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=2070&auto=format&fit=crop'
+  ]
+
   const featuredBooks = books.slice(0, 5)
   const recentBooks = books.slice(0, 6)
 
   return (
     <div className="pb-4">
       {/* Hero Banner */}
-      <div className="relative h-[200px] overflow-hidden">
-        <img
-          src="/hero-banner.jpg"
-          alt="Biblio-Haiti"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#9B1B30]/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4">
-          <p className="font-poppins font-semibold text-sm text-white text-shadow">
-            Exploration & Culture Haïtienne
-          </p>
+      <div className="relative h-[220px] overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={heroIndex}
+            src={heroImages[heroIndex]}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            alt="Biblio-Haiti"
+            className="w-full h-full object-cover"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#9B1B30]/80 via-transparent to-black/20" />
+        <div className="absolute bottom-6 left-5 right-5">
+          <motion.p 
+            key={`text-${heroIndex}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="font-poppins font-bold text-lg text-white text-shadow leading-tight"
+          >
+            {heroIndex === 0 ? "Découvrez l'héritage d'Haïti" : heroIndex === 1 ? "La littérature à portée de main" : "Gagnez des étoiles en lisant"}
+          </motion.p>
         </div>
         {/* Carousel dots */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {[0, 1, 2].map(i => (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {heroImages.map((_, i) => (
             <div
               key={i}
-              className={`w-2 h-2 rounded-full transition-all ${i === heroIndex ? 'bg-[#FAA307] w-4' : 'bg-white/50'}`}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${i === heroIndex ? 'bg-[#FAA307] w-4' : 'bg-white/40'}`}
             />
           ))}
         </div>
@@ -65,7 +132,10 @@ export default function HomeScreen() {
 
       {/* Category Pills */}
       <div className="mt-4 px-4">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div 
+          ref={categoryRef}
+          className="flex gap-2 overflow-x-auto no-scrollbar pb-1 scroll-smooth"
+        >
           {categories.map(cat => (
             <CategoryPill key={cat.id} {...cat} />
           ))}
@@ -73,7 +143,12 @@ export default function HomeScreen() {
       </div>
 
       {/* For You Section */}
-      <div className="mt-6 px-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mt-6 px-4"
+      >
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-poppins font-semibold text-base text-[#1A1A2E]">Pour toi</h2>
           <button
@@ -83,17 +158,25 @@ export default function HomeScreen() {
             Voir tout <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory">
+        <div 
+          ref={pourToiRef}
+          className="flex gap-3 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory scroll-smooth"
+        >
           {featuredBooks.map(book => (
             <div key={book.id} className="snap-start">
               <BookCard book={book} />
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* New Arrivals */}
-      <div className="mt-6 px-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mt-6 px-4"
+      >
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-poppins font-semibold text-base text-[#1A1A2E]">Nouveautés</h2>
           <button
@@ -103,14 +186,17 @@ export default function HomeScreen() {
             Voir tout <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory">
+        <div 
+          ref={recentBooksRef}
+          className="flex gap-3 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory scroll-smooth"
+        >
           {recentBooks.map(book => (
             <div key={book.id} className="snap-start">
               <BookCard book={book} />
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Quiz CTA Banner */}
       <div className="mt-6 px-4">

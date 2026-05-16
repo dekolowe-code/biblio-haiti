@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { getStoredUser, setStoredUser, getStoredStars } from '@/data/mockData'
+import { supabase } from '@/lib/supabase'
 
 interface AuthUser {
   id: string
@@ -7,6 +7,7 @@ interface AuthUser {
   displayName: string
   avatarUrl: string
   starsBalance: number
+  isAdmin: boolean
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   register: (email: string, password: string, displayName: string) => Promise<boolean>
   logout: () => void
   updateStars: (amount: number) => void
+  updateProfile: (updates: Partial<AuthUser>) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -25,66 +27,130 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const stored = getStoredUser()
-    if (stored) {
-      setUser({
-        ...stored,
-        starsBalance: getStoredStars(),
-      })
-    }
-    setIsLoading(false)
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchProfile(session.user.id, session.user.email!)
+      } else {
+        setIsLoading(false)
+      }
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchProfile(session.user.id, session.user.email!)
+      } else {
+        setUser(null)
+        setIsLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock login - in production, use Supabase auth
-    if (email && password.length >= 6) {
-      const stored = getStoredUser()
-      if (stored && stored.email === email) {
-        setUser({ ...stored, starsBalance: getStoredStars() })
-        return true
+  const fetchProfile = async (id: string, email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error && error.code !== 'PGRST116') throw error
+
+      if (data) {
+        setUser({
+          id,
+          email,
+          displayName: data.display_name,
+          avatarUrl: data.avatar_url,
+          starsBalance: data.stars_balance,
+          isAdmin: email === 'jeekothebest@gmail.com' || data.is_admin === true,
+        })
+      } else {
+        // Fallback or create profile if it doesn't exist
+        setUser({
+          id,
+          email,
+          displayName: email.split('@')[0],
+          avatarUrl: '',
+          starsBalance: 50,
+          isAdmin: email === 'jeekothebest@gmail.com',
+        })
       }
-      // Auto-create for demo
-      const newUser = {
-        id: `user_${Date.now()}`,
-        email,
-        displayName: email.split('@')[0],
-        avatarUrl: '/avatar-default.jpg',
-        starsBalance: getStoredStars(),
-      }
-      setStoredUser(newUser)
-      setUser(newUser)
-      return true
+    } catch (err) {
+      console.error('Error fetching profile:', err)
+    } finally {
+      setIsLoading(false)
     }
-    return false
+  }
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    return !error
   }
 
   const register = async (email: string, password: string, displayName: string): Promise<boolean> => {
-    if (email && password.length >= 6 && displayName) {
-      const newUser = {
-        id: `user_${Date.now()}`,
-        email,
-        displayName,
-        avatarUrl: '/avatar-default.jpg',
-        starsBalance: 100, // Welcome bonus
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: { display_name: displayName }
       }
-      setStoredUser(newUser)
-      setUser(newUser)
-      return true
+    })
+    
+    if (error) return false
+
+    if (data.user) {
+      // Create profile entry
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        display_name: displayName,
+        stars_balance: 100,
+      })
     }
-    return false
+    
+    return true
   }
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem('bibliohaiti_user')
   }
 
-  const updateStars = (amount: number) => {
-    setUser(prev => prev ? { ...prev, starsBalance: prev.starsBalance + amount } : null)
+  const updateStars = async (amount: number) => {
+    if (!user) return
+    const newBalance = user.starsBalance + amount
+    setUser(prev => prev ? { ...prev, starsBalance: newBalance } : null)
+    
+    // Update in Supabase
+    await supabase.from('profiles').update({ stars_balance: newBalance }).eq('id', user.id)
+  }
+
+  const updateProfile = async (updates: Partial<AuthUser>) => {
+    if (!user) return false
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          display_name: updates.displayName || user.displayName,
+          avatar_url: updates.avatarUrl || user.avatarUrl,
+        })
+      
+      if (error) throw error
+
+      setUser(prev => prev ? { ...prev, ...updates } : null)
+      return true
+    } catch (err) {
+      console.error('Update profile error:', err)
+      return false
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateStars }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateStars, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

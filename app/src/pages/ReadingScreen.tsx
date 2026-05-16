@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Star, Settings, ChevronLeft, ChevronRight, Type, Sun, Moon } from 'lucide-react'
-import { books, updateReadingProgress } from '@/data/mockData'
+import { type Book } from '@/data/mockData'
+import { useLibrary } from '@/context/LibraryContext'
+import { getAllBooks } from '@/lib/bookService'
+import TextReader from '@/components/readers/TextReader'
+import PDFReader from '@/components/readers/PDFReader'
+import EPUBReader from '@/components/readers/EPUBReader'
+import '@/reader.css'
 
 type Theme = 'white' | 'sepia' | 'dark'
 
@@ -10,27 +16,38 @@ export default function ReadingScreen() {
   const { bookId } = useParams<{ bookId: string }>()
   const navigate = useNavigate()
   const [showControls, setShowControls] = useState(true)
-  const [currentPage, setCurrentPage] = useState(0)
+  const [currentPage, setCurrentPage] = useState<number | string>(0)
+  const [isLoaded, setIsLoaded] = useState(false)
   const [fontSize, setFontSize] = useState(16)
   const [theme, setTheme] = useState<Theme>('sepia')
   const [showSettings, setShowSettings] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
-
-  const book = books.find(b => b.id === bookId)
-
-  useEffect(() => {
-    if (book) {
-      const saved = localStorage.getItem(`reading_${bookId}`)
-      if (saved) setCurrentPage(parseInt(saved))
-    }
-  }, [bookId, book])
+  const [book, setBook] = useState<Book | null>(null)
+  const { library, isLoading, updateProgress: syncProgress, isFavorite: checkFavorite, toggleFavorite } = useLibrary()
+  const favorite = checkFavorite(bookId!)
 
   useEffect(() => {
-    if (book) {
-      localStorage.setItem(`reading_${bookId}`, String(currentPage))
-      updateReadingProgress(bookId!, currentPage, currentPage >= book.pages - 1)
+    getAllBooks().then(all => {
+      const found = all.find(b => b.id === bookId)
+      setBook(found || null)
+    })
+  }, [bookId])
+
+  useEffect(() => {
+    if (book && !isLoading) {
+      const entry = library.find(ub => ub.bookId === bookId)
+      if (entry && entry.currentPage !== undefined) {
+        setCurrentPage(entry.currentPage)
+      }
+      setIsLoaded(true)
     }
-  }, [currentPage, book, bookId])
+  }, [bookId, book, isLoading])
+
+  useEffect(() => {
+    if (book && isLoaded) {
+      const isFinished = typeof currentPage === 'number' ? currentPage >= book.pages - 1 : false
+      syncProgress(bookId!, currentPage as any, isFinished)
+    }
+  }, [currentPage, book, bookId, isLoaded])
 
   useEffect(() => {
     const timer = setTimeout(() => setShowControls(false), 4000)
@@ -53,7 +70,7 @@ export default function ReadingScreen() {
   const currentTheme = themeStyles[theme]
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} relative`}>
+    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} relative overflow-hidden`}>
       {/* Top Toolbar */}
       <AnimatePresence>
         {showControls && (
@@ -70,8 +87,8 @@ export default function ReadingScreen() {
               </button>
               <h2 className="font-poppins font-semibold text-sm truncate flex-1 mx-3 text-center">{book.title}</h2>
               <div className="flex gap-2">
-                <button onClick={() => setIsFavorite(!isFavorite)}>
-                  <Star className={`w-5 h-5 ${isFavorite ? 'text-[#FAA307] fill-[#FAA307]' : ''}`} />
+                <button onClick={() => toggleFavorite(book.id)}>
+                  <Star className={`w-5 h-5 ${favorite ? 'text-[#FAA307] fill-[#FAA307]' : ''}`} />
                 </button>
                 <button onClick={() => setShowSettings(!showSettings)}>
                   <Settings className="w-5 h-5" />
@@ -92,20 +109,22 @@ export default function ReadingScreen() {
             className={`fixed top-14 left-0 right-0 z-40 ${currentTheme.bg} shadow-lg px-4 py-4`}
             style={{ maxWidth: 430, margin: '0 auto' }}
           >
-            {/* Font Size */}
-            <div className="flex items-center gap-3 mb-3">
-              <Type className="w-4 h-4" />
-              <span className="text-xs font-inter">Taille</span>
-              <input
-                type="range"
-                min={14}
-                max={22}
-                value={fontSize}
-                onChange={(e) => setFontSize(Number(e.target.value))}
-                className="flex-1 accent-[#C41E3A]"
-              />
-              <span className="text-xs font-inter w-6">{fontSize}</span>
-            </div>
+            {/* Font Size (Only for Text books) */}
+            {book.type === 'text' && (
+              <div className="flex items-center gap-3 mb-3">
+                <Type className="w-4 h-4" />
+                <span className="text-xs font-inter">Taille</span>
+                <input
+                  type="range"
+                  min={14}
+                  max={22}
+                  value={fontSize}
+                  onChange={(e) => setFontSize(Number(e.target.value))}
+                  className="flex-1 accent-[#C41E3A]"
+                />
+                <span className="text-xs font-inter w-6">{fontSize}</span>
+              </div>
+            )}
             {/* Theme */}
             <div className="flex items-center gap-3">
               <span className="text-xs font-inter">Thème</span>
@@ -131,15 +150,30 @@ export default function ReadingScreen() {
 
       {/* Content Area */}
       <div
-        className="pt-16 pb-20 px-6 min-h-screen flex items-center justify-center"
+        className="pt-16 pb-20 w-full h-screen flex items-center justify-center"
         onClick={() => setShowControls(!showControls)}
       >
-        <div
-          className="font-merriweather leading-relaxed w-full"
-          style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}
-        >
-          <p>{book.content[currentPage % book.content.length]}</p>
-        </div>
+        {book.type === 'pdf' && book.pdfUrl ? (
+          <PDFReader 
+            fileUrl={book.pdfUrl} 
+            onPageChange={(page) => setCurrentPage(page)}
+            initialPage={typeof currentPage === 'number' ? currentPage : 0}
+          />
+        ) : book.type === 'epub' && book.epubUrl ? (
+          <EPUBReader 
+            fileUrl={book.epubUrl} 
+            onPageChange={(cfi) => setCurrentPage(cfi as any)}
+            initialLocation={typeof currentPage === 'string' ? currentPage : undefined}
+          />
+        ) : (
+          <div className="px-6 w-full max-w-lg">
+            <TextReader 
+              content={book.content} 
+              currentPage={typeof currentPage === 'number' ? currentPage : 0} 
+              fontSize={fontSize} 
+            />
+          </div>
+        )}
       </div>
 
       {/* Bottom Toolbar */}

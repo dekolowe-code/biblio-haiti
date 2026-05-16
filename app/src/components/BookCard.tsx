@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Star, Lock } from 'lucide-react'
 import type { Book } from '@/data/mockData'
-import { getStoredLibrary } from '@/data/mockData'
+import { useLibrary } from '@/context/LibraryContext'
 import { useNavigate } from 'react-router'
 
 interface BookCardProps {
@@ -11,7 +11,7 @@ interface BookCardProps {
 
 export default function BookCard({ book, compact = false }: BookCardProps) {
   const navigate = useNavigate()
-  const library = getStoredLibrary()
+  const { library } = useLibrary()
   const userBook = library.find(ub => ub.bookId === book.id)
   const isUnlocked = userBook?.isUnlocked || !book.isPremium
 

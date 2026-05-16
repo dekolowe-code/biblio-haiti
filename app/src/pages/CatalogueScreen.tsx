@@ -1,16 +1,32 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams } from 'react-router'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import BookCard from '@/components/BookCard'
-import { books, countries, categories, styles } from '@/data/mockData'
+import { countries, categories, styles, type Book, books as mockBooks } from '@/data/mockData'
+import { getAllBooks } from '@/lib/bookService'
 
 export default function CatalogueScreen() {
+  const [searchParams] = useSearchParams()
+  const initialCategory = searchParams.get('category') || ''
+
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState<string>('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory)
   const [selectedStyle, setSelectedStyle] = useState<string>('')
   const [accessFilter, setAccessFilter] = useState<string>('all') // all, free, premium
+  const [books, setBooks] = useState<Book[]>(mockBooks)
+
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory)
+    }
+  }, [initialCategory])
+
+  useEffect(() => {
+    getAllBooks().then(setBooks)
+  }, [])
 
   const filteredBooks = useMemo(() => {
     return books.filter(book => {
@@ -25,7 +41,7 @@ export default function CatalogueScreen() {
         (accessFilter === 'premium' && book.isPremium)
       return matchesSearch && matchesCountry && matchesCategory && matchesStyle && matchesAccess
     })
-  }, [searchQuery, selectedCountry, selectedCategory, selectedStyle, accessFilter])
+  }, [searchQuery, selectedCountry, selectedCategory, selectedStyle, accessFilter, books])
 
   const activeFilters = [
     selectedCountry && { label: selectedCountry, onRemove: () => setSelectedCountry('') },

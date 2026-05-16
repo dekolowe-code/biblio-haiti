@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { toast } from 'sonner'
 
 export default function AuthScreen() {
   const navigate = useNavigate()
@@ -48,12 +49,17 @@ export default function AuthScreen() {
       }
 
       if (success) {
+        toast.success(isRegister ? 'Compte créé avec succès !' : 'Connexion réussie !')
         navigate('/')
       } else {
-        setError('Une erreur est survenue. Réessayez.')
+        const msg = isRegister ? 'Erreur lors de la création du compte' : 'Email ou mot de passe incorrect'
+        setError(msg)
+        toast.error(msg)
       }
-    } catch {
-      setError('Une erreur est survenue')
+    } catch (err: any) {
+      const msg = err.message || 'Une erreur est survenue'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

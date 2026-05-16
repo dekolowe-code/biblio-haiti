@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router'
 import { BookOpen, Heart, Lock, Trash2 } from 'lucide-react'
-import { books, getStoredLibrary } from '@/data/mockData'
 import { useAuth } from '@/context/AuthContext'
+import { useLibrary } from '@/context/LibraryContext'
+import { type Book, books as mockBooks } from '@/data/mockData'
+import { getAllBooks } from '@/lib/bookService'
 
 type TabType = 'reading' | 'favorites' | 'unlocked'
 
@@ -11,20 +13,22 @@ export default function LibraryScreen() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('reading')
-  const [library, setLibrary] = useState(getStoredLibrary())
+  const { library, isLoading } = useLibrary()
+  const [books, setBooks] = useState<Book[]>(mockBooks)
 
-  const refresh = () => setLibrary(getStoredLibrary())
+  useEffect(() => {
+    getAllBooks().then(setBooks)
+  }, [])
 
-  const readingBooks = library.filter(ub => ub.isUnlocked && ub.currentPage > 0 && !ub.isFinished)
+  const readingBooks = library.filter(ub => !ub.isFinished && (ub.currentPage > 0 || ub.isUnlocked))
   const favoriteBooks = library.filter(ub => ub.isFavorite)
   const unlockedBooks = library.filter(ub => ub.isUnlocked)
 
   const getBook = (bookId: string) => books.find(b => b.id === bookId)
 
   const handleDelete = (bookId: string) => {
-    const updated = library.filter(ub => ub.bookId !== bookId)
-    localStorage.setItem('bibliohaiti_library', JSON.stringify(updated))
-    refresh()
+    // Delete logic not yet synced to Supabase (can be added to LibraryContext if needed)
+    toast.info('Fonctionnalité non disponible en mode synchro')
   }
 
   const tabs: { key: TabType; label: string }[] = [

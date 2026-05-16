@@ -1,23 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, Heart, ArrowLeft, Lock, BookOpen, Check } from 'lucide-react'
-import { books, getStoredLibrary, getStoredStars, unlockBook, toggleFavorite, addToLibrary } from '@/data/mockData'
+import { Star, Heart, ArrowLeft, Lock, BookOpen, Check, Loader2 } from 'lucide-react'
+import { type Book, books as mockBooks } from '@/data/mockData'
 import { useAuth } from '@/context/AuthContext'
+import { useLibrary } from '@/context/LibraryContext'
+import { getAllBooks } from '@/lib/bookService'
 
 export default function BookDetailScreen() {
   const { bookId } = useParams<{ bookId: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [book, setBook] = useState<Book | null>(mockBooks.find(b => b.id === bookId) || null)
+  const [allBooks, setAllBooks] = useState<Book[]>(mockBooks)
+  const [loading, setLoading] = useState(!book)
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const book = books.find(b => b.id === bookId)
-  const library = getStoredLibrary()
+  useEffect(() => {
+    getAllBooks().then(all => {
+      setAllBooks(all)
+      const found = all.find(b => b.id === bookId)
+      setBook(found || null)
+      setLoading(false)
+    })
+  }, [bookId])
+
+  const { library, isFavorite, isUnlocked: checkUnlocked, toggleFavorite, unlockBook } = useLibrary()
   const userBook = library.find(ub => ub.bookId === bookId)
-  const isUnlocked = userBook?.isUnlocked || !book?.isPremium
-  const isFavorite = userBook?.isFavorite || false
-  const stars = getStoredStars()
+  const isUnlocked = checkUnlocked(bookId!) || !book?.isPremium
+  const favorite = isFavorite(bookId!)
+  const stars = user?.starsBalance || 0
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <Loader2 className="w-8 h-8 text-[#C41E3A] animate-spin" />
+        <p className="text-sm text-[#6B7280] font-inter">Chargement du livre...</p>
+      </div>
+    )
+  }
 
   if (!book) {
     return (
@@ -27,7 +49,7 @@ export default function BookDetailScreen() {
     )
   }
 
-  const handleUnlock = () => {
+  const handleUnlock = async () => {
     if (!user) {
       navigate('/login')
       return
@@ -37,7 +59,7 @@ export default function BookDetailScreen() {
       setTimeout(() => setToast(null), 3000)
       return
     }
-    const success = unlockBook(book.id)
+    const success = await unlockBook(book.id, book.unlockCost)
     if (success) {
       setShowUnlockAnimation(true)
       setTimeout(() => setShowUnlockAnimation(false), 2000)
@@ -50,7 +72,7 @@ export default function BookDetailScreen() {
       return
     }
     toggleFavorite(book.id)
-    setToast({ message: isFavorite ? 'Retiré des favoris' : 'Ajouté aux favoris', type: 'success' })
+    setToast({ message: favorite ? 'Retiré des favoris' : 'Ajouté aux favoris', type: 'success' })
     setTimeout(() => setToast(null), 2000)
   }
 
@@ -59,11 +81,11 @@ export default function BookDetailScreen() {
       navigate('/login')
       return
     }
-    addToLibrary(book.id)
+    // Reading progress is handled in ReadingScreen
     navigate(`/livre/${book.id}/read`)
   }
 
-  const relatedBooks = books.filter(b => b.id !== book.id && (b.category === book.category || b.country === book.country)).slice(0, 5)
+  const relatedBooks = allBooks.filter(b => b.id !== book.id && (b.category === book.category || b.country === book.country)).slice(0, 5)
 
   return (
     <div className="min-h-full pb-4">
@@ -198,11 +220,11 @@ export default function BookDetailScreen() {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleFavorite}
-          className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 border-2 transition-colors ${isFavorite ? 'border-[#C41E3A] bg-red-50' : 'border-gray-200 bg-white'}`}
+          className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 border-2 transition-colors ${favorite ? 'border-[#C41E3A] bg-red-50' : 'border-gray-200 bg-white'}`}
         >
-          <Heart className={`w-4 h-4 ${isFavorite ? 'text-[#C41E3A] fill-[#C41E3A]' : 'text-[#6B7280]'}`} />
-          <span className={`font-poppins font-semibold text-xs ${isFavorite ? 'text-[#C41E3A]' : 'text-[#1A1A2E]'}`}>
-            {isFavorite ? 'DANS LES FAVORIS' : 'AJOUTER AUX FAVORIS'}
+          <Heart className={`w-4 h-4 ${favorite ? 'text-[#C41E3A] fill-[#C41E3A]' : 'text-[#6B7280]'}`} />
+          <span className={`font-poppins font-semibold text-xs ${favorite ? 'text-[#C41E3A]' : 'text-[#1A1A2E]'}`}>
+            {favorite ? 'DANS LES FAVORIS' : 'AJOUTER AUX FAVORIS'}
           </span>
         </motion.button>
       </div>
