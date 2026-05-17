@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Home, Search, Bookmark, User, BookOpen, Star, SearchIcon } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import ChatWidget from '@/components/chat/ChatWidget'
 
 const tabs = [
   { path: '/', label: 'Accueil', icon: Home },
@@ -71,6 +72,8 @@ export default function MobileShell({ children }: { children: React.ReactNode })
             </motion.div>
           </AnimatePresence>
         </div>
+
+        <ChatWidget />
 
         {/* Bottom Navigation */}
         <div className="px-4 pb-4 shrink-0">
