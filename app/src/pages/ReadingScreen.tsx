@@ -45,7 +45,11 @@ export default function ReadingScreen() {
   useEffect(() => {
     if (book && isLoaded) {
       const isFinished = typeof currentPage === 'number' ? currentPage >= book.pages - 1 : false
-      syncProgress(bookId!, currentPage as any, isFinished)
+      const timeoutId = setTimeout(() => {
+        syncProgress(bookId!, currentPage as any, isFinished)
+      }, 5000)
+      
+      return () => clearTimeout(timeoutId)
     }
   }, [currentPage, book, bookId, isLoaded])
 
@@ -151,7 +155,7 @@ export default function ReadingScreen() {
 
       {/* Content Area */}
       <div
-        className="pt-16 pb-20 w-full h-screen flex items-center justify-center"
+        className={`w-full h-screen flex items-center justify-center ${book.type === 'text' ? 'pt-16 pb-20' : ''}`}
         onClick={() => setShowControls(!showControls)}
       >
         {book.type === 'pdf' && book.pdfUrl ? (

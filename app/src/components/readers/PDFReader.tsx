@@ -13,9 +13,9 @@ interface PDFReaderProps {
   initialPage?: number
 }
 
-// Base width is the screen width minus padding
+// Base width is the screen width
 function getBaseWidth() {
-  return Math.min(window.innerWidth - 24, 420)
+  return window.innerWidth // Full width
 }
 
 const MIN_WIDTH = 200

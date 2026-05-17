@@ -122,9 +122,10 @@ export async function uploadBook(bookData: Partial<Book>, coverFile?: File, book
   let epubUrl = bookData.epubUrl
 
   if (coverFile) {
+    const sanitizedCoverName = coverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')
     const { data, error } = await supabase.storage
       .from('book-assets')
-      .upload(`covers/${Date.now()}_${coverFile.name}`, coverFile)
+      .upload(`covers/${Date.now()}_${sanitizedCoverName}`, coverFile)
     if (error) {
       console.error('Error uploading cover:', error)
       return { data: null, error: new Error('Erreur lors de l\'upload de la couverture. Vérifiez que le bucket book-assets existe et est public.') }
@@ -136,10 +137,11 @@ export async function uploadBook(bookData: Partial<Book>, coverFile?: File, book
   }
 
   if (bookFile) {
+    const sanitizedBookName = bookFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')
     const folder = bookData.type === 'pdf' ? 'pdfs' : 'epubs'
     const { data, error } = await supabase.storage
       .from('book-assets')
-      .upload(`${folder}/${Date.now()}_${bookFile.name}`, bookFile)
+      .upload(`${folder}/${Date.now()}_${sanitizedBookName}`, bookFile)
     if (error) {
       console.error('Error uploading book file:', error)
       return { data: null, error: new Error('Erreur lors de l\'upload du fichier. Vérifiez que le bucket book-assets existe et est public.') }
