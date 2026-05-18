@@ -17,6 +17,7 @@ export default function ReadingScreen() {
   const navigate = useNavigate()
   const [showControls, setShowControls] = useState(true)
   const [currentPage, setCurrentPage] = useState<number | string>(0)
+  const [epubPosition, setEpubPosition] = useState<{ current: number; total: number } | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [fontSize, setFontSize] = useState(16)
   const [theme, setTheme] = useState<Theme>('sepia')
@@ -64,7 +65,9 @@ export default function ReadingScreen() {
 
   const currentPageNumber = typeof currentPage === 'number' ? currentPage : 0
   const totalPages = book.pages
-  const progress = totalPages > 0 ? ((currentPageNumber + 1) / totalPages) * 100 : 0
+  const displayedPage = book.type === 'epub' && epubPosition ? epubPosition.current : currentPageNumber + 1
+  const displayedTotal = book.type === 'epub' && epubPosition ? epubPosition.total : totalPages
+  const progress = displayedTotal > 0 ? (displayedPage / displayedTotal) * 100 : 0
 
   const themeStyles: Record<Theme, { bg: string; text: string }> = {
     white: { bg: 'bg-white', text: 'text-[#1A1A2E]' },
@@ -168,6 +171,7 @@ export default function ReadingScreen() {
           <EPUBReader 
             fileUrl={book.epubUrl} 
             onPageChange={(cfi) => setCurrentPage(cfi as any)}
+            onPageInfoChange={(info) => setEpubPosition(info)}
             initialLocation={typeof currentPage === 'string' ? currentPage : undefined}
           />
         ) : (
@@ -203,7 +207,11 @@ export default function ReadingScreen() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-inter">
-                  {typeof currentPage === 'number' ? `Page ${currentPage + 1} sur ${totalPages}` : 'Lecture en cours'}
+                  {book.type === 'epub' && epubPosition
+                    ? `Page ${epubPosition.current} sur ${epubPosition.total}`
+                    : typeof currentPage === 'number'
+                      ? `Page ${currentPage + 1} sur ${totalPages}`
+                      : 'Lecture en cours'}
                 </span>
                 <div className="flex gap-4">
                   <button
