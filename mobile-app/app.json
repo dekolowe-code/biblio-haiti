@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "Biblio Haïti",
+    "slug": "biblio-haiti",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "biblio-haiti",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#9B1B30"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bibliohaiiti.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Pour changer votre photo de profil",
+        "NSUserNotificationsUsageDescription": "Pour vous rappeler de lire chaque jour"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#C41E3A"
+      },
+      "package": "com.bibliohaiiti.app",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#C41E3A"
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": []
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {}
+  }
+}
